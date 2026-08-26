@@ -26,6 +26,11 @@ class BoardLookTest {
     assertEquals(69f, layout.barWidth, 1.5f)
     assertEquals(1536f - 1332f, layout.trayWidth, 0.5f)
     assertEquals(105f, layout.topFrame, 0.5f)
+    val trayColumn =
+      layout.wellTop + layout.blackWellHeight + layout.wellSplit + layout.whiteWellHeight + layout.wellBottomPad
+    assertEquals(1024f, trayColumn, 0.5f)
+    assertEquals(80f, layout.wellTop, 0.5f)
+    assertEquals(908f, 1024f - layout.wellBottomPad, 0.5f)
     assertTrue(layout.checker <= layout.barWidth + 0.01f)
     assertTrue(layout.checker <= layout.pointWidth * CHECKER_FILL + 0.01f)
   }
@@ -63,7 +68,19 @@ class BoardLookTest {
   @Test
   fun trayShowsEveryBorneOffChecker() {
     assertEquals(0, trayStackCount(0))
+    assertEquals(8, trayStackCount(8))
+    assertEquals(9, trayStackCount(9))
     assertEquals(15, trayStackCount(15))
+  }
+
+  @Test
+  fun trayStackFitsFifteenInTheWell() {
+    val layout = boardLayout(width = 1536f, height = 1024f)
+    val step = trayStackStep(15, layout.whiteWellHeight, layout.checker)
+    val thickness = trayEdgeThickness(layout.checker)
+    val stack = thickness + step * 14
+    assertTrue(stack <= layout.whiteWellHeight)
+    assertTrue(step > 0f)
   }
 
   @Test

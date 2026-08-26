@@ -363,29 +363,38 @@ private fun OffRack(
       side = Side.BLACK,
       count = trayStackCount(blackOff),
       modifier =
-        Modifier.height(layout.wellHeight.dp).fillMaxWidth().onGloballyPositioned { anchors.putCenter(BLACK_OFF, it) },
+        Modifier.height(layout.blackWellHeight.dp)
+          .fillMaxWidth()
+          .onGloballyPositioned { anchors.putCenter(BLACK_OFF, it) },
     )
     Spacer(Modifier.height(layout.wellSplit.dp))
     OffSlot(
       side = Side.WHITE,
       count = trayStackCount(whiteOff),
       modifier =
-        Modifier.height(layout.wellHeight.dp).fillMaxWidth().onGloballyPositioned { anchors.putCenter(WHITE_OFF, it) },
+        Modifier.height(layout.whiteWellHeight.dp)
+          .fillMaxWidth()
+          .onGloballyPositioned { anchors.putCenter(WHITE_OFF, it) },
     )
+    Spacer(Modifier.height(layout.wellBottomPad.dp))
   }
 }
 
 @Composable
 private fun OffSlot(side: Side, count: Int, modifier: Modifier = Modifier) {
-  Box(modifier = modifier, contentAlignment = Alignment.BottomCenter) {
-    val checker = LocalCheckerSize.current
-    val visual = minOf(count, 8)
+  val checker = LocalCheckerSize.current
+  val n = trayStackCount(count)
+  BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.BottomCenter) {
+    if (n == 0) return@BoxWithConstraints
+    val thickness = trayEdgeThickness(checker.value)
+    val step = trayStackStep(n, maxHeight.value, checker.value)
+    val overlap = (thickness - step).coerceAtLeast(0f)
     Column(
-      modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+      modifier = Modifier.fillMaxWidth(),
       horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.Bottom,
+      verticalArrangement = Arrangement.spacedBy((-overlap).dp),
     ) {
-      repeat(visual) { CheckerEdge(side = side, diameter = checker) }
+      repeat(n) { CheckerEdge(side = side, diameter = checker) }
     }
   }
 }

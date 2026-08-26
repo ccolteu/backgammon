@@ -53,6 +53,8 @@ data class BoardLayout(
   val wellSplit: Float,
   val wellBottomPad: Float,
   val wellHeight: Float,
+  val blackWellHeight: Float,
+  val whiteWellHeight: Float,
   val pointWidth: Float,
   val checker: Float,
   val innerHeight: Float,
@@ -78,7 +80,9 @@ fun boardLayout(width: Float, height: Float): BoardLayout {
   val splitBottom = height * WELL_SPLIT_BOTTOM_FRAC
   val wellBottom = height * WELL_BOTTOM_FRAC
   val wellSplit = splitBottom - splitTop
-  val wellHeight = minOf(splitTop - wellTop, wellBottom - splitBottom)
+  val blackWellHeight = (splitTop - wellTop).coerceAtLeast(1f)
+  val whiteWellHeight = (wellBottom - splitBottom).coerceAtLeast(1f)
+  val wellHeight = minOf(blackWellHeight, whiteWellHeight)
   val innerH = (height - top - bottom).coerceAtLeast(1f)
   val point = (minOf(leftPlay, rightPlay) / 6f).coerceAtLeast(1f)
   val checker = checkerDiameter(point, innerH / 2f, bar)
@@ -94,6 +98,8 @@ fun boardLayout(width: Float, height: Float): BoardLayout {
     wellSplit = wellSplit,
     wellBottomPad = height - wellBottom,
     wellHeight = wellHeight,
+    blackWellHeight = blackWellHeight,
+    whiteWellHeight = whiteWellHeight,
     pointWidth = point,
     checker = checker,
     innerHeight = innerH,
@@ -108,6 +114,16 @@ fun stackBadge(count: Int): Int? = if (count > 5) count else null
 fun stackShown(count: Int): Int = minOf(count.coerceAtLeast(0), 5)
 
 fun trayStackCount(off: Int): Int = off.coerceIn(0, 15)
+
+fun trayEdgeThickness(checker: Float): Float = checker * 0.28f
+
+fun trayStackStep(count: Int, wellHeight: Float, checker: Float): Float {
+  val n = trayStackCount(count)
+  val thickness = trayEdgeThickness(checker)
+  if (n <= 1) return thickness
+  val available = (wellHeight - 6f).coerceAtLeast(thickness)
+  return minOf(thickness, (available - thickness) / (n - 1))
+}
 
 @Composable
 fun CheckerDot(side: Side, size: Dp = CHECKER_DP.dp, badge: Int? = null, modifier: Modifier = Modifier) {

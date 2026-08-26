@@ -63,7 +63,11 @@ class BackgammonViewModelTest {
     assertEquals(com.example.backgammon.domain.Side.BLACK, vm.uiState.value.board.sideToMove)
 
     vm.onRollSettled()
-    assertTrue(vm.uiState.value.phase == PlayPhase.MOVING || Rules.legalMoves(vm.uiState.value.board).isEmpty())
+    assertTrue(
+      vm.uiState.value.phase == PlayPhase.MOVING ||
+        vm.uiState.value.phase == PlayPhase.NO_MOVES ||
+        Rules.legalMoves(vm.uiState.value.board).isEmpty(),
+    )
   }
 
   @Test
@@ -75,8 +79,12 @@ class BackgammonViewModelTest {
     play(vm, 13, 8)
     vm.onRollSettled()
     var guard = 0
-    while (vm.uiState.value.phase == PlayPhase.MOVING && guard++ < 8) {
-      vm.onMoveSettled()
+    while (guard++ < 12) {
+      when (vm.uiState.value.phase) {
+        PlayPhase.MOVING -> vm.onMoveSettled()
+        PlayPhase.NO_MOVES -> vm.onNoMovesSettled()
+        else -> break
+      }
     }
     assertEquals(PlayPhase.AWAITING_ROLL, vm.uiState.value.phase)
     assertEquals(3, vm.uiState.value.rollA)
@@ -124,6 +132,34 @@ class BackgammonViewModelTest {
     vm.setAiLevel(com.example.backgammon.engine.AiLevel.HARD)
     assertEquals(com.example.backgammon.engine.AiLevel.HARD, vm.uiState.value.aiLevel)
     assertEquals(com.example.backgammon.engine.AiLevel.HARD, store.loadAiLevel())
+  }
+
+  @Test
+  fun deadRoll_showsNoMovesThenPassesToCpu() {
+    val points = MutableList(25) { 0 }
+    points[24] = -2
+    points[23] = -2
+    val store = MemoryGameStore()
+    store.save(
+      GameState(
+        points = points,
+        whiteBar = 1,
+        blackBar = 0,
+        whiteOff = 14,
+        blackOff = 11,
+        sideToMove = Side.WHITE,
+        dice = emptyList(),
+      ),
+    )
+    val vm = BackgammonViewModel(store, rollDice = { 1 to 2 })
+    vm.resumeSavedGame()
+    vm.onDiceTapped()
+    vm.onRollSettled()
+    assertEquals(PlayPhase.NO_MOVES, vm.uiState.value.phase)
+    assertEquals("No moves", vm.uiState.value.statusText)
+    vm.onNoMovesSettled()
+    assertEquals(PlayPhase.ROLLING, vm.uiState.value.phase)
+    assertEquals(Side.BLACK, vm.uiState.value.board.sideToMove)
   }
 
   private fun play(vm: BackgammonViewModel, from: Int, to: Int) {

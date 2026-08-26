@@ -86,16 +86,12 @@ class BackgammonViewModel(
     pendingRoll = null
     game = Rules.withDice(game, rolled.first, rolled.second)
     persist()
-    if (Rules.legalMoves(game).isEmpty()) {
-      passTurn()
-    } else if (game.sideToMove == Side.BLACK) {
-      cpuQueue.clear()
-      cpuQueue.addAll(Engine.planTurn(game, aiLevel))
-      startNextCpuMove()
-    } else {
-      phase = PlayPhase.READY
-      publish()
-    }
+    continueAfterDice()
+  }
+
+  fun onNoMovesSettled() {
+    if (phase != PlayPhase.NO_MOVES) return
+    passTurn()
   }
 
   fun onMoveSettled() {
@@ -176,18 +172,9 @@ class BackgammonViewModel(
         phase = PlayPhase.READY
         publish()
       }
-      game.sideToMove == Side.BLACK && game.dice.isEmpty() -> startCpuRoll()
-      game.sideToMove == Side.BLACK -> {
-        cpuQueue.clear()
-        cpuQueue.addAll(Engine.planTurn(game, aiLevel))
-        startNextCpuMove()
-      }
+      game.dice.isEmpty() && game.sideToMove == Side.BLACK -> startCpuRoll()
       game.dice.isEmpty() -> awaitHumanRoll()
-      Rules.legalMoves(game).isEmpty() -> passTurn()
-      else -> {
-        phase = PlayPhase.READY
-        publish()
-      }
+      else -> continueAfterDice()
     }
   }
 
@@ -211,6 +198,20 @@ class BackgammonViewModel(
     phase = PlayPhase.AWAITING_ROLL
     persist()
     publish()
+  }
+
+  private fun continueAfterDice() {
+    if (Rules.legalMoves(game).isEmpty()) {
+      phase = PlayPhase.NO_MOVES
+      publish()
+    } else if (game.sideToMove == Side.BLACK) {
+      cpuQueue.clear()
+      cpuQueue.addAll(Engine.planTurn(game, aiLevel))
+      startNextCpuMove()
+    } else {
+      phase = PlayPhase.READY
+      publish()
+    }
   }
 
   private fun startCpuRoll() {

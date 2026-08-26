@@ -10,6 +10,7 @@ enum class PlayPhase {
   ROLLING,
   READY,
   MOVING,
+  NO_MOVES,
 }
 
 fun Side.opposite(): Side = if (this == Side.WHITE) Side.BLACK else Side.WHITE
@@ -83,6 +84,7 @@ fun turnStatus(game: GameState, phase: PlayPhase = PlayPhase.READY): String =
     game.winner != null -> ""
     phase == PlayPhase.AWAITING_ROLL && game.sideToMove == Side.WHITE -> "Tap to roll"
     phase == PlayPhase.READY && game.sideToMove == Side.WHITE -> "Move pieces"
+    phase == PlayPhase.NO_MOVES -> "No moves"
     else -> ""
   }
 

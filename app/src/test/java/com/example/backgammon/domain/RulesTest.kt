@@ -120,6 +120,7 @@ class RulesTest {
     val rolled = Rules.withDice(startingGame(), 2, 5)
     assertEquals("Move pieces", turnStatus(rolled, PlayPhase.READY))
     assertEquals("", turnStatus(rolled.copy(sideToMove = Side.BLACK), PlayPhase.READY))
+    assertEquals("No moves", turnStatus(rolled, PlayPhase.NO_MOVES))
   }
 
   @Test
@@ -146,5 +147,43 @@ class RulesTest {
     assertEquals(1, visual.countAt(24))
     assertEquals(0, visual.countAt(move.to))
     assertEquals(2, rolled.countAt(24))
+  }
+
+  @Test
+  fun mustUseBothDiceWhenPossible() {
+    val points = MutableList(25) { 0 }
+    points[10] = 1
+    points[1] = -2
+    val s =
+      GameState(
+        points = points,
+        whiteBar = 0,
+        blackBar = 0,
+        whiteOff = 14,
+        blackOff = 13,
+        sideToMove = Side.WHITE,
+        dice = listOf(3, 6),
+      )
+    val moves = Rules.legalMoves(s)
+    assertTrue(moves.any { it.from == 10 && it.to == 4 && it.die == 6 })
+    assertFalse(moves.any { it.die == 3 })
+  }
+
+  @Test
+  fun closedBoard_noEntryFromBar() {
+    val points = MutableList(25) { 0 }
+    points[24] = -2
+    points[23] = -2
+    val s =
+      GameState(
+        points = points,
+        whiteBar = 1,
+        blackBar = 0,
+        whiteOff = 14,
+        blackOff = 11,
+        sideToMove = Side.WHITE,
+        dice = listOf(1, 2),
+      )
+    assertTrue(Rules.legalMoves(s).isEmpty())
   }
 }

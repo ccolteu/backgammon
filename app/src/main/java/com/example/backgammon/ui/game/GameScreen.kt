@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,10 +53,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
 import com.example.backgammon.R
 import com.example.backgammon.domain.BLACK_BAR
 import com.example.backgammon.domain.BLACK_OFF
 import com.example.backgammon.domain.GameState
+import com.example.backgammon.domain.PlayPhase
 import com.example.backgammon.domain.Side
 import com.example.backgammon.domain.WHITE_BAR
 import com.example.backgammon.domain.WHITE_OFF
@@ -73,6 +76,12 @@ fun GameScreen(modifier: Modifier = Modifier) {
   val context = LocalContext.current
   val viewModel: BackgammonViewModel = viewModel(factory = BackgammonViewModel.factory(context))
   val state by viewModel.uiState.collectAsStateWithLifecycle()
+  LaunchedEffect(state.phase) {
+    if (state.phase == PlayPhase.NO_MOVES) {
+      delay(1_200)
+      viewModel.onNoMovesSettled()
+    }
+  }
   Box(modifier = modifier.fillMaxSize().background(WalnutBackground)) {
     val anchors = rememberBoardAnchors()
     var origin by remember { mutableStateOf(Offset.Zero) }

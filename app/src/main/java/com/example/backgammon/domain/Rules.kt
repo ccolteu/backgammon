@@ -3,12 +3,58 @@ package com.example.backgammon.domain
 object Rules {
   fun legalMoves(state: GameState): List<Move> {
     if (state.winner != null || state.dice.isEmpty()) return emptyList()
-    val unique = state.dice.distinct()
-    return unique.flatMap { die -> movesForDie(state, die) }
+    val firsts = maximalFirstMoves(state)
+    if (firsts.isEmpty()) return emptyList()
+    val maxUsed = firsts.values.max()
+    var allowed = firsts.filter { it.value == maxUsed }.keys
+    if (maxUsed == 1) {
+      val higher = state.dice.max()
+      val highOnly = allowed.filter { it.die == higher }
+      if (highOnly.isNotEmpty()) allowed = highOnly.toSet()
+    }
+    return allowed.toList()
   }
 
   fun apply(state: GameState, move: Move): GameState {
     require(move in legalMoves(state)) { "Illegal move $move" }
+    return commit(state, move)
+  }
+
+  fun endTurn(state: GameState): GameState =
+    state.copy(sideToMove = state.sideToMove.opposite(), dice = emptyList())
+
+  fun withDice(state: GameState, a: Int, b: Int): GameState =
+    state.copy(dice = diceFromRoll(a, b), rollA = a, rollB = b)
+
+  fun withDice(state: GameState, dice: List<Int>): GameState =
+    state.copy(
+      dice = dice,
+      rollA = dice.firstOrNull() ?: 0,
+      rollB = dice.getOrNull(1)?.takeIf { it != dice.first() } ?: dice.firstOrNull() ?: 0,
+    )
+
+  private fun maximalFirstMoves(state: GameState): Map<Move, Int> {
+    val best = mutableMapOf<Move, Int>()
+    fun walk(current: GameState, first: Move?, used: Int) {
+      val hops = candidateMoves(current)
+      if (hops.isEmpty()) {
+        if (first != null) best[first] = maxOf(best[first] ?: 0, used)
+        return
+      }
+      for (hop in hops) {
+        walk(commit(current, hop), first ?: hop, used + 1)
+      }
+    }
+    walk(state, null, 0)
+    return best
+  }
+
+  private fun candidateMoves(state: GameState): List<Move> {
+    if (state.winner != null || state.dice.isEmpty()) return emptyList()
+    return state.dice.distinct().flatMap { die -> movesForDie(state, die) }
+  }
+
+  private fun commit(state: GameState, move: Move): GameState {
     val points = state.points.toMutableList()
     var whiteBar = state.whiteBar
     var blackBar = state.blackBar
@@ -50,19 +96,6 @@ object Rules {
       dice = used,
     )
   }
-
-  fun endTurn(state: GameState): GameState =
-    state.copy(sideToMove = state.sideToMove.opposite(), dice = emptyList())
-
-  fun withDice(state: GameState, a: Int, b: Int): GameState =
-    state.copy(dice = diceFromRoll(a, b), rollA = a, rollB = b)
-
-  fun withDice(state: GameState, dice: List<Int>): GameState =
-    state.copy(
-      dice = dice,
-      rollA = dice.firstOrNull() ?: 0,
-      rollB = dice.getOrNull(1)?.takeIf { it != dice.first() } ?: dice.firstOrNull() ?: 0,
-    )
 
   private fun movesForDie(state: GameState, die: Int): List<Move> {
     val side = state.sideToMove

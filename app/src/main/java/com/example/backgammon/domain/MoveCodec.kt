@@ -1,12 +1,6 @@
 package com.example.backgammon.domain
 
 object MoveCodec {
-  fun format(move: Move): String {
-    val from = label(move.from)
-    val to = label(move.to)
-    return "$from/$to${if (move.hit) "*" else ""}"
-  }
-
   fun encodeState(state: GameState): String =
     listOf(
         state.points.drop(1).joinToString(","),
@@ -42,11 +36,4 @@ object MoveCodec {
       rollB = rollB,
     )
   }
-
-  private fun label(point: Int): String =
-    when (point) {
-      WHITE_BAR, BLACK_BAR -> "bar"
-      WHITE_OFF, BLACK_OFF -> "off"
-      else -> point.toString()
-    }
 }

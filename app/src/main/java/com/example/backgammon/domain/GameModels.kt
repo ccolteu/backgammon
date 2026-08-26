@@ -79,23 +79,11 @@ fun startingGame(): GameState {
 fun diceFromRoll(a: Int, b: Int): List<Int> = if (a == b) listOf(a, a, a, a) else listOf(a, b)
 
 fun turnStatus(game: GameState, phase: PlayPhase = PlayPhase.READY): String =
-  when (game.winner) {
-    Side.WHITE -> "You won!"
-    Side.BLACK -> "CPU wins"
-    null ->
-      when (phase) {
-        PlayPhase.AWAITING_ROLL -> "Tap the dice to roll"
-        PlayPhase.ROLLING -> if (game.sideToMove == Side.BLACK) "CPU rolling…" else "Rolling…"
-        PlayPhase.MOVING -> if (game.sideToMove == Side.BLACK) "CPU moving…" else diceStatus(game)
-        PlayPhase.READY -> diceStatus(game)
-      }
-  }
-
-fun diceStatus(game: GameState): String =
   when {
-    game.dice.isEmpty() -> "Your turn"
-    game.rollA == game.rollB && game.rollA > 0 -> "Doubles ${game.rollA} — ${game.dice.size} left"
-    else -> "${game.rollA} · ${game.rollB}"
+    game.winner != null -> ""
+    phase == PlayPhase.AWAITING_ROLL && game.sideToMove == Side.WHITE -> "Tap to roll"
+    phase == PlayPhase.READY && game.sideToMove == Side.WHITE -> "Move pieces"
+    else -> ""
   }
 
 fun boardWithoutMover(state: GameState, move: Move): GameState {

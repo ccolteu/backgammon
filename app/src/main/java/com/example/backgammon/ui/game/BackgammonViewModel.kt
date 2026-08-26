@@ -10,7 +10,6 @@ import com.example.backgammon.data.PrefsGameStore
 import com.example.backgammon.data.isResumable
 import com.example.backgammon.domain.GameState
 import com.example.backgammon.domain.Move
-import com.example.backgammon.domain.MoveCodec
 import com.example.backgammon.domain.PlayPhase
 import com.example.backgammon.domain.Rules
 import com.example.backgammon.domain.Side
@@ -19,6 +18,7 @@ import com.example.backgammon.domain.boardWithoutMover
 import com.example.backgammon.domain.dieSpent
 import com.example.backgammon.domain.startingGame
 import com.example.backgammon.domain.turnStatus
+import com.example.backgammon.engine.AiLevel
 import com.example.backgammon.engine.Engine
 import kotlin.random.Random
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +29,7 @@ data class GameUiState(
   val board: GameState,
   val selected: Int? = null,
   val legalTargets: Set<Int> = emptySet(),
-  val statusText: String = "Tap the dice to roll",
+  val statusText: String = "Tap to roll",
   val phase: PlayPhase = PlayPhase.AWAITING_ROLL,
   val rollA: Int = 0,
   val rollB: Int = 0,
@@ -42,6 +42,7 @@ data class GameUiState(
   val diceInteractive: Boolean = true,
   val askResume: Boolean = false,
   val askConfirmNewGame: Boolean = false,
+  val aiLevel: AiLevel = AiLevel.MEDIUM,
 )
 
 class BackgammonViewModel(
@@ -55,8 +56,7 @@ class BackgammonViewModel(
   private var animId = 0
   private val cpuQueue = ArrayDeque<Move>()
   private var pendingSaved: GameState? = null
-  private var pendingLog: List<String> = emptyList()
-  private val log = mutableListOf<String>()
+  private var aiLevel: AiLevel = store.loadAiLevel()
   private val _ui = MutableStateFlow(toUi())
   val uiState: StateFlow<GameUiState> = _ui
 
@@ -64,7 +64,6 @@ class BackgammonViewModel(
     val saved = store.load()
     if (saved != null && saved.isResumable()) {
       pendingSaved = saved
-      pendingLog = store.loadLog()
       _ui.value = toUi().copy(askResume = true, diceInteractive = false, boardInteractive = false)
     } else {
       if (saved != null) store.clear()
@@ -91,7 +90,7 @@ class BackgammonViewModel(
       passTurn()
     } else if (game.sideToMove == Side.BLACK) {
       cpuQueue.clear()
-      cpuQueue.addAll(Engine.planTurn(game))
+      cpuQueue.addAll(Engine.planTurn(game, aiLevel))
       startNextCpuMove()
     } else {
       phase = PlayPhase.READY
@@ -105,7 +104,6 @@ class BackgammonViewModel(
     val mover = game.sideToMove
     pendingMove = null
     game = Rules.apply(game, move)
-    log += if (mover == Side.WHITE) "You ${MoveCodec.format(move)}" else "CPU ${MoveCodec.format(move)}"
     persist()
     if (game.winner != null) {
       phase = PlayPhase.READY
@@ -148,7 +146,7 @@ class BackgammonViewModel(
   }
 
   fun requestNewGame() {
-    if (log.isEmpty() && game == startingGame() && phase == PlayPhase.AWAITING_ROLL) {
+    if (game == startingGame() && phase == PlayPhase.AWAITING_ROLL) {
       newGame()
     } else {
       _ui.update { it.copy(askConfirmNewGame = true) }
@@ -161,13 +159,17 @@ class BackgammonViewModel(
     _ui.update { it.copy(askConfirmNewGame = false) }
   }
 
+  fun setAiLevel(level: AiLevel) {
+    if (level == aiLevel) return
+    aiLevel = level
+    store.saveAiLevel(level)
+    _ui.update { it.copy(aiLevel = level) }
+  }
+
   fun resumeSavedGame() {
     val saved = pendingSaved ?: return
     pendingSaved = null
     game = saved
-    log.clear()
-    log += pendingLog
-    pendingLog = emptyList()
     persist()
     when {
       game.winner != null -> {
@@ -177,7 +179,7 @@ class BackgammonViewModel(
       game.sideToMove == Side.BLACK && game.dice.isEmpty() -> startCpuRoll()
       game.sideToMove == Side.BLACK -> {
         cpuQueue.clear()
-        cpuQueue.addAll(Engine.planTurn(game))
+        cpuQueue.addAll(Engine.planTurn(game, aiLevel))
         startNextCpuMove()
       }
       game.dice.isEmpty() -> awaitHumanRoll()
@@ -191,13 +193,11 @@ class BackgammonViewModel(
 
   fun startNewGameFromPrompt() {
     pendingSaved = null
-    pendingLog = emptyList()
     newGame()
   }
 
   private fun newGame() {
     game = startingGame()
-    log.clear()
     pendingRoll = null
     pendingMove = null
     cpuQueue.clear()
@@ -246,7 +246,6 @@ class BackgammonViewModel(
 
   private fun persist() {
     store.save(game)
-    store.saveLog(log.toList())
   }
 
   private fun publish() {
@@ -269,6 +268,7 @@ class BackgammonViewModel(
       animatingSide = pendingMove?.let { game.sideToMove },
       boardInteractive = phase == PlayPhase.READY && game.winner == null && game.sideToMove == Side.WHITE,
       diceInteractive = phase == PlayPhase.AWAITING_ROLL && game.winner == null && game.sideToMove == Side.WHITE,
+      aiLevel = aiLevel,
     )
   }
 

@@ -4,17 +4,18 @@ import android.content.Context
 import com.example.backgammon.domain.GameState
 import com.example.backgammon.domain.MoveCodec
 import com.example.backgammon.domain.startingGame
+import com.example.backgammon.engine.AiLevel
 
 interface GameStore {
   fun load(): GameState?
 
   fun save(state: GameState)
 
-  fun loadLog(): List<String>
-
-  fun saveLog(lines: List<String>)
-
   fun clear()
+
+  fun loadAiLevel(): AiLevel
+
+  fun saveAiLevel(level: AiLevel)
 }
 
 class PrefsGameStore(context: Context) : GameStore {
@@ -26,23 +27,21 @@ class PrefsGameStore(context: Context) : GameStore {
     prefs.edit().putString(KEY_STATE, MoveCodec.encodeState(state)).apply()
   }
 
-  override fun loadLog(): List<String> {
-    val raw = prefs.getString(KEY_LOG, "").orEmpty()
-    return if (raw.isBlank()) emptyList() else raw.split("\n")
-  }
-
-  override fun saveLog(lines: List<String>) {
-    prefs.edit().putString(KEY_LOG, lines.joinToString("\n")).apply()
-  }
-
   override fun clear() {
     prefs.edit().remove(KEY_STATE).remove(KEY_LOG).apply()
+  }
+
+  override fun loadAiLevel(): AiLevel = AiLevel.fromStorage(prefs.getString(KEY_LEVEL, null))
+
+  override fun saveAiLevel(level: AiLevel) {
+    prefs.edit().putString(KEY_LEVEL, level.name).apply()
   }
 
   private companion object {
     const val PREFS = "backgammon_game"
     const val KEY_STATE = "state"
     const val KEY_LOG = "log"
+    const val KEY_LEVEL = "ai_level"
   }
 }
 

@@ -11,12 +11,6 @@ class MoveCodecTest {
   }
 
   @Test
-  fun format_marksHitsAndOff() {
-    assertEquals("24/18*", MoveCodec.format(Move(24, 18, 6, hit = true)))
-    assertEquals("6/off", MoveCodec.format(Move(6, WHITE_OFF, 6)))
-  }
-
-  @Test
   fun stateRoundTrip_preservesPhysicalDiceOnDoubles() {
     val mid = Rules.withDice(startingGame(), 5, 5).copy(dice = listOf(5, 5))
     val decoded = MoveCodec.decodeState(MoveCodec.encodeState(mid))

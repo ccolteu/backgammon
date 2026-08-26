@@ -17,16 +17,18 @@ class BackgammonViewModelTest {
     val vm = BackgammonViewModel(MemoryGameStore(), rollDice = { 3 to 5 })
     assertEquals(PlayPhase.AWAITING_ROLL, vm.uiState.value.phase)
     assertTrue(vm.uiState.value.board.dice.isEmpty())
-    assertEquals("Tap the dice to roll", vm.uiState.value.statusText)
+    assertEquals("Tap to roll", vm.uiState.value.statusText)
 
     vm.onDiceTapped()
     assertEquals(PlayPhase.ROLLING, vm.uiState.value.phase)
     assertEquals(3, vm.uiState.value.rollA)
     assertEquals(5, vm.uiState.value.rollB)
+    assertEquals("", vm.uiState.value.statusText)
 
     vm.onRollSettled()
     assertEquals(PlayPhase.READY, vm.uiState.value.phase)
     assertEquals(listOf(3, 5), vm.uiState.value.board.dice)
+    assertEquals("Move pieces", vm.uiState.value.statusText)
   }
 
   @Test
@@ -114,6 +116,16 @@ class BackgammonViewModelTest {
     assertEquals(WHITE_OFF, vm.uiState.value.animatingMove?.to)
   }
 
+  @Test
+  fun setAiLevel_persists() {
+    val store = MemoryGameStore()
+    val vm = BackgammonViewModel(store, rollDice = { 3 to 5 })
+    assertEquals(com.example.backgammon.engine.AiLevel.MEDIUM, vm.uiState.value.aiLevel)
+    vm.setAiLevel(com.example.backgammon.engine.AiLevel.HARD)
+    assertEquals(com.example.backgammon.engine.AiLevel.HARD, vm.uiState.value.aiLevel)
+    assertEquals(com.example.backgammon.engine.AiLevel.HARD, store.loadAiLevel())
+  }
+
   private fun play(vm: BackgammonViewModel, from: Int, to: Int) {
     vm.onPointClicked(from)
     vm.onPointClicked(to)
@@ -123,7 +135,7 @@ class BackgammonViewModelTest {
 
 private class MemoryGameStore : GameStore {
   private var state: GameState? = null
-  private var lines: List<String> = emptyList()
+  private var level = com.example.backgammon.engine.AiLevel.MEDIUM
 
   override fun load(): GameState? = state
 
@@ -131,14 +143,13 @@ private class MemoryGameStore : GameStore {
     this.state = state
   }
 
-  override fun loadLog(): List<String> = lines
-
-  override fun saveLog(lines: List<String>) {
-    this.lines = lines
-  }
-
   override fun clear() {
     state = null
-    lines = emptyList()
+  }
+
+  override fun loadAiLevel() = level
+
+  override fun saveAiLevel(level: com.example.backgammon.engine.AiLevel) {
+    this.level = level
   }
 }

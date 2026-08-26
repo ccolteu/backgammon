@@ -112,23 +112,18 @@ class RulesTest {
   }
 
   @Test
-  fun turnStatus_showsTwoDiceNotFourOnDoubles() {
-    val rolled = Rules.withDice(startingGame(), 5, 5)
-    assertEquals("Doubles 5 — 4 left", turnStatus(rolled))
-    val mixed = Rules.withDice(startingGame(), 2, 5)
-    assertEquals("2 · 5", turnStatus(mixed))
+  fun turnStatus_onlyPromptsWhenThePlayerShouldAct() {
+    assertEquals("Tap to roll", turnStatus(startingGame(), PlayPhase.AWAITING_ROLL))
+    assertEquals("", turnStatus(startingGame(), PlayPhase.ROLLING))
+    assertEquals("", turnStatus(startingGame().copy(sideToMove = Side.BLACK), PlayPhase.ROLLING))
+    assertEquals("", turnStatus(startingGame().copy(sideToMove = Side.BLACK), PlayPhase.MOVING))
+    val rolled = Rules.withDice(startingGame(), 2, 5)
+    assertEquals("Move pieces", turnStatus(rolled, PlayPhase.READY))
+    assertEquals("", turnStatus(rolled.copy(sideToMove = Side.BLACK), PlayPhase.READY))
   }
 
   @Test
-  fun turnStatus_asksPlayerToTapDice() {
-    assertEquals("Tap the dice to roll", turnStatus(startingGame(), PlayPhase.AWAITING_ROLL))
-    assertEquals("Rolling…", turnStatus(startingGame(), PlayPhase.ROLLING))
-    assertEquals("CPU rolling…", turnStatus(startingGame().copy(sideToMove = Side.BLACK), PlayPhase.ROLLING))
-    assertEquals("CPU moving…", turnStatus(startingGame().copy(sideToMove = Side.BLACK), PlayPhase.MOVING))
-  }
-
-  @Test
-  fun turnStatus_announcesYouWon() {
+  fun turnStatus_isBlankWhenSomeoneHasWon() {
     val points = MutableList(25) { 0 }
     val won =
       GameState(
@@ -140,7 +135,7 @@ class RulesTest {
         sideToMove = Side.WHITE,
         dice = emptyList(),
       )
-    assertEquals("You won!", turnStatus(won))
+    assertEquals("", turnStatus(won))
   }
 
   @Test

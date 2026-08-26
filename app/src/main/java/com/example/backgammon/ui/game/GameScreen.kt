@@ -1,5 +1,6 @@
 package com.example.backgammon.ui.game
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,15 +8,23 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,14 +35,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -44,10 +59,14 @@ import com.example.backgammon.domain.GameState
 import com.example.backgammon.domain.Side
 import com.example.backgammon.domain.WHITE_BAR
 import com.example.backgammon.domain.WHITE_OFF
+import com.example.backgammon.engine.AiLevel
 import com.example.backgammon.theme.BackgammonTheme
+import com.example.backgammon.theme.Brass
 import com.example.backgammon.theme.Cream
 import com.example.backgammon.theme.Highlight
+import com.example.backgammon.theme.Ink
 import com.example.backgammon.theme.WalnutBackground
+import com.example.backgammon.theme.WalnutRail
 
 @Composable
 fun GameScreen(modifier: Modifier = Modifier) {
@@ -58,12 +77,15 @@ fun GameScreen(modifier: Modifier = Modifier) {
     val anchors = rememberBoardAnchors()
     var origin by remember { mutableStateOf(Offset.Zero) }
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-      val boardHeight = maxHeight
+      val hudGutter = 112.dp
+      val playWidth = (maxWidth - hudGutter).coerceAtLeast(0.dp)
+      val boardHeight = minOf(maxHeight, playWidth / BOARD_ASPECT)
       val boardWidth = boardHeight * BOARD_ASPECT
       val layout = boardLayout(boardWidth.value, boardHeight.value)
-      BoardFrame(
-        modifier = Modifier.align(Alignment.Center).fillMaxHeight().width(boardWidth).height(boardHeight),
-      ) {
+      Box(modifier = Modifier.fillMaxSize().padding(end = hudGutter)) {
+        BoardFrame(
+          modifier = Modifier.align(Alignment.Center).width(boardWidth).height(boardHeight),
+        ) {
         BoxWithConstraints(Modifier.fillMaxSize().onGloballyPositioned { origin = it.positionInRoot() }) {
           CompositionLocalProvider(LocalCheckerSize provides layout.checker.dp) {
             BackgammonBoard(
@@ -99,16 +121,34 @@ fun GameScreen(modifier: Modifier = Modifier) {
             )
           }
         }
+        }
       }
-      Text(
-        text = "New game",
-        color = Cream,
+      Column(
         modifier =
-          Modifier
-            .align(Alignment.CenterEnd)
-            .padding(end = 16.dp)
-            .clickable(onClick = viewModel::requestNewGame),
-      )
+          Modifier.align(Alignment.CenterEnd)
+            .fillMaxHeight()
+            .width(hudGutter)
+            .padding(top = 20.dp, bottom = 20.dp, end = 12.dp, start = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+      ) {
+        Column(
+          modifier = Modifier.width(IntrinsicSize.Max),
+          verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+          AiLevelMenu(level = state.aiLevel, onPick = viewModel::setAiLevel)
+          HudButton(onClick = viewModel::requestNewGame, label = "New game")
+        }
+        Spacer(Modifier.weight(1f))
+        if (state.statusText.isNotEmpty()) {
+          Text(
+            text = state.statusText,
+            style = hudStatusStyle,
+            color = Cream,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+          )
+        }
+      }
     }
   }
   if (state.askConfirmNewGame) {
@@ -141,6 +181,64 @@ fun GameScreen(modifier: Modifier = Modifier) {
       confirmButton = { TextButton(onClick = viewModel::resumeSavedGame) { Text("Resume") } },
       dismissButton = { TextButton(onClick = viewModel::startNewGameFromPrompt) { Text("New game") } },
     )
+  }
+}
+
+private val hudLabelStyle =
+  TextStyle(
+    fontFamily = FontFamily.Serif,
+    fontWeight = FontWeight.SemiBold,
+    fontSize = 12.sp,
+    letterSpacing = 0.6.sp,
+    lineHeight = 14.sp,
+  )
+
+private val hudStatusStyle =
+  TextStyle(
+    fontFamily = FontFamily.Serif,
+    fontWeight = FontWeight.Medium,
+    fontSize = 13.sp,
+    letterSpacing = 0.3.sp,
+    lineHeight = 16.sp,
+  )
+
+private val hudButtonShape = RoundedCornerShape(4.dp)
+
+@Composable
+private fun hudButtonColors() =
+  ButtonDefaults.buttonColors(containerColor = WalnutRail, contentColor = Cream, disabledContainerColor = WalnutRail, disabledContentColor = Cream.copy(alpha = 0.5f))
+
+@Composable
+private fun HudButton(onClick: () -> Unit, label: String, modifier: Modifier = Modifier) {
+  Button(
+    onClick = onClick,
+    modifier = modifier.fillMaxWidth().defaultMinSize(minWidth = 0.dp, minHeight = 0.dp).height(34.dp).shadow(4.dp, hudButtonShape),
+    shape = hudButtonShape,
+    border = BorderStroke(1.dp, Brass),
+    colors = hudButtonColors(),
+    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
+  ) {
+    Text(text = label, style = hudLabelStyle, maxLines = 1, textAlign = TextAlign.Center)
+  }
+}
+
+@Composable
+private fun AiLevelMenu(level: AiLevel, onPick: (AiLevel) -> Unit) {
+  var open by remember { mutableStateOf(false) }
+  Box(modifier = Modifier.fillMaxWidth()) {
+    HudButton(onClick = { open = true }, label = level.label)
+    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+      AiLevel.entries.forEach { option ->
+        DropdownMenuItem(
+          text = { Text(option.label, style = hudLabelStyle, color = Ink) },
+          onClick = {
+            onPick(option)
+            open = false
+          },
+        )
+      }
+    }
   }
 }
 

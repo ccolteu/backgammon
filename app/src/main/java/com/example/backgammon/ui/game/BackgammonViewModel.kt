@@ -43,6 +43,7 @@ data class GameUiState(
   val askResume: Boolean = false,
   val askConfirmNewGame: Boolean = false,
   val aiLevel: AiLevel = AiLevel.MEDIUM,
+  val boardStyle: BoardStyle = BoardStyle.ORIGINAL,
 )
 
 class BackgammonViewModel(
@@ -57,6 +58,7 @@ class BackgammonViewModel(
   private val cpuQueue = ArrayDeque<Move>()
   private var pendingSaved: GameState? = null
   private var aiLevel: AiLevel = store.loadAiLevel()
+  private var boardStyle: BoardStyle = store.loadBoardStyle()
   private val _ui = MutableStateFlow(toUi())
   val uiState: StateFlow<GameUiState> = _ui
 
@@ -160,6 +162,13 @@ class BackgammonViewModel(
     aiLevel = level
     store.saveAiLevel(level)
     _ui.update { it.copy(aiLevel = level) }
+  }
+
+  fun setBoardStyle(style: BoardStyle) {
+    if (style == boardStyle) return
+    boardStyle = style
+    store.saveBoardStyle(style)
+    _ui.update { it.copy(boardStyle = style) }
   }
 
   fun resumeSavedGame() {
@@ -270,6 +279,7 @@ class BackgammonViewModel(
       boardInteractive = phase == PlayPhase.READY && game.winner == null && game.sideToMove == Side.WHITE,
       diceInteractive = phase == PlayPhase.AWAITING_ROLL && game.winner == null && game.sideToMove == Side.WHITE,
       aiLevel = aiLevel,
+      boardStyle = boardStyle,
     )
   }
 

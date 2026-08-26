@@ -1,6 +1,7 @@
 package com.example.backgammon.ui.game
 
 import com.example.backgammon.theme.BoardFelt
+import com.example.backgammon.theme.WalnutBackground
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -88,5 +89,12 @@ class BoardLookTest {
     assertEquals(0.12f, CHECKER_SHADOW_X, 0.001f)
     assertEquals(0.18f, CHECKER_SHADOW_Y, 0.001f)
     assertTrue(CHECKER_SHADOW_ALPHA > 0.3f)
+  }
+
+  @Test
+  fun defaultBoardStyleIsOriginalWalnut() {
+    assertEquals(BoardStyle.ORIGINAL, BoardStyle.fromStorage(null))
+    assertEquals(WalnutBackground, BoardStyle.ORIGINAL.backdrop)
+    assertEquals("Original", BoardStyle.ORIGINAL.label)
   }
 }

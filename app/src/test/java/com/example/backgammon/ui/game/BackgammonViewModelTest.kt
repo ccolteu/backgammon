@@ -135,6 +135,20 @@ class BackgammonViewModelTest {
   }
 
   @Test
+  fun setBoardStyle_persistsWithoutResettingTheGame() {
+    val store = MemoryGameStore()
+    val vm = BackgammonViewModel(store, rollDice = { 3 to 5 })
+    vm.onDiceTapped()
+    vm.onRollSettled()
+    assertEquals(BoardStyle.ORIGINAL, vm.uiState.value.boardStyle)
+    vm.setBoardStyle(BoardStyle.MAHOGANY_CLARET)
+    assertEquals(BoardStyle.MAHOGANY_CLARET, vm.uiState.value.boardStyle)
+    assertEquals(BoardStyle.MAHOGANY_CLARET, store.loadBoardStyle())
+    assertEquals(PlayPhase.READY, vm.uiState.value.phase)
+    assertEquals(listOf(3, 5), vm.uiState.value.board.dice)
+  }
+
+  @Test
   fun deadRoll_showsNoMovesThenPassesToCpu() {
     val points = MutableList(25) { 0 }
     points[24] = -2
@@ -172,6 +186,7 @@ class BackgammonViewModelTest {
 private class MemoryGameStore : GameStore {
   private var state: GameState? = null
   private var level = com.example.backgammon.engine.AiLevel.MEDIUM
+  private var board = BoardStyle.ORIGINAL
 
   override fun load(): GameState? = state
 
@@ -187,5 +202,11 @@ private class MemoryGameStore : GameStore {
 
   override fun saveAiLevel(level: com.example.backgammon.engine.AiLevel) {
     this.level = level
+  }
+
+  override fun loadBoardStyle() = board
+
+  override fun saveBoardStyle(style: BoardStyle) {
+    board = style
   }
 }

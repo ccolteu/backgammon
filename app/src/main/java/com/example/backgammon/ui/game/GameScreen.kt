@@ -25,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -54,7 +55,6 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
-import com.example.backgammon.R
 import com.example.backgammon.domain.BLACK_BAR
 import com.example.backgammon.domain.BLACK_OFF
 import com.example.backgammon.domain.GameState
@@ -68,7 +68,6 @@ import com.example.backgammon.theme.Brass
 import com.example.backgammon.theme.Cream
 import com.example.backgammon.theme.Highlight
 import com.example.backgammon.theme.Ink
-import com.example.backgammon.theme.WalnutBackground
 import com.example.backgammon.theme.WalnutRail
 
 @Composable
@@ -82,7 +81,7 @@ fun GameScreen(modifier: Modifier = Modifier) {
       viewModel.onNoMovesSettled()
     }
   }
-  Box(modifier = modifier.fillMaxSize().background(WalnutBackground)) {
+  Box(modifier = modifier.fillMaxSize().background(state.boardStyle.backdrop)) {
     val anchors = rememberBoardAnchors()
     var origin by remember { mutableStateOf(Offset.Zero) }
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -93,6 +92,7 @@ fun GameScreen(modifier: Modifier = Modifier) {
       val layout = boardLayout(boardWidth.value, boardHeight.value)
       Box(modifier = Modifier.fillMaxSize().padding(end = hudGutter)) {
         BoardFrame(
+          style = state.boardStyle,
           modifier = Modifier.align(Alignment.Center).width(boardWidth).height(boardHeight),
         ) {
         BoxWithConstraints(Modifier.fillMaxSize().onGloballyPositioned { origin = it.positionInRoot() }) {
@@ -146,6 +146,7 @@ fun GameScreen(modifier: Modifier = Modifier) {
         ) {
           AiLevelMenu(level = state.aiLevel, onPick = viewModel::setAiLevel)
           HudButton(onClick = viewModel::requestNewGame, label = "New game")
+          BoardStyleMenu(selected = state.boardStyle, onPick = viewModel::setBoardStyle)
         }
         Spacer(Modifier.weight(1f))
         if (state.statusText.isNotEmpty()) {
@@ -252,11 +253,43 @@ private fun AiLevelMenu(level: AiLevel, onPick: (AiLevel) -> Unit) {
 }
 
 @Composable
-private fun BoardFrame(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+private fun BoardStyleMenu(selected: BoardStyle, onPick: (BoardStyle) -> Unit) {
+  var open by remember { mutableStateOf(false) }
+  Box(modifier = Modifier.fillMaxWidth()) {
+    HudButton(onClick = { open = true }, label = "Board")
+    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+      BoardStyle.entries.forEach { option ->
+        val current = option == selected
+        DropdownMenuItem(
+          text = {
+            Text(
+              text = option.label,
+              style = hudLabelStyle.copy(fontWeight = if (current) FontWeight.Bold else FontWeight.SemiBold),
+              color = if (current) Brass else Ink,
+            )
+          },
+          enabled = !current,
+          colors =
+            MenuDefaults.itemColors(
+              textColor = Ink,
+              disabledTextColor = Brass,
+            ),
+          onClick = {
+            onPick(option)
+            open = false
+          },
+        )
+      }
+    }
+  }
+}
+
+@Composable
+private fun BoardFrame(style: BoardStyle, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
   Box(modifier = modifier) {
     Image(
-      painter = painterResource(R.drawable.board_empty),
-      contentDescription = null,
+      painter = painterResource(style.drawable),
+      contentDescription = style.label,
       modifier = Modifier.fillMaxSize(),
       contentScale = ContentScale.FillBounds,
     )

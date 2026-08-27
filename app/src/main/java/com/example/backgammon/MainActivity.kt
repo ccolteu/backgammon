@@ -1,6 +1,5 @@
 package com.example.backgammon
 
-import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
 import androidx.activity.ComponentActivity
@@ -16,7 +15,6 @@ import com.example.backgammon.theme.BackgammonTheme
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
-    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
     super.onCreate(savedInstanceState)
     hideSystemBars()
     setContent {

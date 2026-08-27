@@ -14,6 +14,51 @@ import org.junit.Test
 
 class BoardLookTest {
   @Test
+  fun phonePortraitBoardFillsTheWindowWidth() {
+    val slot =
+      boardSlot(
+        windowW = 1080f,
+        windowH = 2400f,
+        tablet = false,
+        landscape = false,
+        hudGutter = 112f,
+        hudBar = 100f,
+        margin = 32f,
+      )
+    assertEquals(1080f, slot.width, 0.5f)
+    assertEquals(1080f / BOARD_ASPECT, slot.height, 0.5f)
+  }
+
+  @Test
+  fun tabletBoardNeverFillsTheWindow() {
+    val landscape =
+      boardSlot(
+        windowW = 1920f,
+        windowH = 1200f,
+        tablet = true,
+        landscape = true,
+        hudGutter = 112f,
+        hudBar = 100f,
+        margin = 32f,
+      )
+    assertTrue(landscape.width < 1920f)
+    assertTrue(landscape.height < 1200f)
+    val portrait =
+      boardSlot(
+        windowW = 1200f,
+        windowH = 1920f,
+        tablet = true,
+        landscape = false,
+        hudGutter = 112f,
+        hudBar = 100f,
+        margin = 32f,
+      )
+    assertTrue(portrait.width < 1200f)
+    assertTrue(portrait.height < 1920f)
+    assertEquals(portrait.width / portrait.height, BOARD_ASPECT, 0.001f)
+  }
+
+  @Test
   fun overlayTracksTheBoardPhoto() {
     assertEquals(1536f / 1024f, BOARD_ASPECT, 0.001f)
     assertEquals(72f / 1536f, LEFT_FRAME_FRAC, 0.0001f)

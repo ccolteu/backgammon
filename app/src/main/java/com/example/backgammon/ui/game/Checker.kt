@@ -24,6 +24,10 @@ import com.example.backgammon.R
 import com.example.backgammon.domain.Side
 
 const val BOARD_ASPECT = 1536f / 1024f
+const val TABLET_SMALLEST_WIDTH_DP = 600
+const val HUD_GUTTER_DP = 112
+const val HUD_BAR_DP = 100
+const val TABLET_BOARD_MARGIN_DP = 32
 const val LEFT_FRAME_FRAC = 72f / 1536f
 const val BAR_LEFT_FRAC = 676f / 1536f
 const val BAR_RIGHT_FRAC = 745f / 1536f
@@ -61,6 +65,41 @@ data class BoardLayout(
   val innerHeight: Float,
   val frame: Float,
 )
+
+data class BoardSlot(val width: Float, val height: Float)
+
+fun boardSlot(
+  windowW: Float,
+  windowH: Float,
+  tablet: Boolean,
+  landscape: Boolean,
+  hudGutter: Float,
+  hudBar: Float,
+  margin: Float,
+  aspect: Float = BOARD_ASPECT,
+): BoardSlot {
+  if (!tablet) {
+    if (landscape) {
+      val playW = (windowW - hudGutter).coerceAtLeast(1f)
+      val height = minOf(windowH, playW / aspect)
+      return BoardSlot(width = height * aspect, height = height)
+    }
+    val width = windowW.coerceAtLeast(1f)
+    return BoardSlot(width = width, height = width / aspect)
+  }
+  if (landscape) {
+    val side = maxOf(margin, hudGutter)
+    val maxW = (windowW - 2f * side).coerceAtLeast(1f)
+    val maxH = (windowH - 2f * margin).coerceAtLeast(1f)
+    val height = minOf(maxH, maxW / aspect)
+    return BoardSlot(width = height * aspect, height = height)
+  }
+  val vert = maxOf(margin, hudBar)
+  val maxW = (windowW - 2f * margin).coerceAtLeast(1f)
+  val maxH = (windowH - 2f * vert).coerceAtLeast(1f)
+  val height = minOf(maxH, maxW / aspect)
+  return BoardSlot(width = height * aspect, height = height)
+}
 
 fun checkerDiameter(pointWidth: Float, halfHeight: Float, barWidth: Float = Float.POSITIVE_INFINITY): Float =
   minOf(pointWidth * CHECKER_FILL, halfHeight / 5f, barWidth * BAR_CHECKER_MAX)

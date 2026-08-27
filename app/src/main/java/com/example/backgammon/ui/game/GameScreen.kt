@@ -38,13 +38,14 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -96,84 +97,116 @@ private fun GameTable(state: GameUiState, viewModel: BackgammonViewModel, modifi
     )
     val anchors = rememberBoardAnchors()
     var origin by remember { mutableStateOf(Offset.Zero) }
+    val isTablet = LocalConfiguration.current.smallestScreenWidthDp >= TABLET_SMALLEST_WIDTH_DP
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-      val hudGutter = 112.dp
-      val playWidth = (maxWidth - hudGutter).coerceAtLeast(0.dp)
-      val boardHeight = minOf(maxHeight, playWidth / BOARD_ASPECT)
-      val boardWidth = boardHeight * BOARD_ASPECT
-      val layout = boardLayout(boardWidth.value, boardHeight.value)
-      Box(modifier = Modifier.fillMaxSize().padding(end = hudGutter)) {
+      val landscape = maxWidth > maxHeight
+      val hudGutter = HUD_GUTTER_DP.dp
+      val hudBar = HUD_BAR_DP.dp
+      val tabletMargin = TABLET_BOARD_MARGIN_DP.dp
+      val slot =
+        boardSlot(
+          windowW = maxWidth.value,
+          windowH = maxHeight.value,
+          tablet = isTablet,
+          landscape = landscape,
+          hudGutter = hudGutter.value,
+          hudBar = hudBar.value,
+          margin = tabletMargin.value,
+        )
+      val boardWidth = slot.width.dp
+      val boardHeight = slot.height.dp
+      val layout = boardLayout(slot.width, slot.height)
+      @Composable
+      fun BoardCanvas(modifier: Modifier) {
         BoardFrame(
           style = state.boardStyle,
-          modifier =
-            Modifier.align(Alignment.Center)
-              .width(boardWidth)
-              .height(boardHeight)
-              .shadow(14.dp, RectangleShape, clip = false),
+          modifier = modifier.shadow(14.dp, RectangleShape, clip = false),
         ) {
-        BoxWithConstraints(Modifier.fillMaxSize().onGloballyPositioned { origin = it.positionInRoot() }) {
-          CompositionLocalProvider(LocalCheckerSize provides layout.checker.dp) {
-            BackgammonBoard(
-              layout = layout,
-              board = state.board,
-              selected = state.selected,
-              legalTargets = state.legalTargets,
-              onPointClick = viewModel::onPointClicked,
-              enabled = state.boardInteractive,
-              anchors = anchors,
-              dice = {
-                DiceTray(
-                  rollA = state.rollA,
-                  rollB = state.rollB,
-                  usedA = state.usedA,
-                  usedB = state.usedB,
-                  phase = state.phase,
-                  enabled = state.diceInteractive,
-                  onTap = viewModel::onDiceTapped,
-                  onRollSettled = viewModel::onRollSettled,
-                  dieSize = (layout.frame * 1.14f * 0.63f).dp,
-                  showHint = false,
-                )
-              },
-            )
-            FlyingChecker(
-              animId = state.animId,
-              move = state.animatingMove,
-              side = state.animatingSide,
-              board = state.board,
-              anchors = anchors,
-              originInRoot = origin,
-              onSettled = viewModel::onMoveSettled,
-            )
+          BoxWithConstraints(Modifier.fillMaxSize().onGloballyPositioned { origin = it.positionInRoot() }) {
+            CompositionLocalProvider(LocalCheckerSize provides layout.checker.dp) {
+              BackgammonBoard(
+                layout = layout,
+                board = state.board,
+                selected = state.selected,
+                legalTargets = state.legalTargets,
+                onPointClick = viewModel::onPointClicked,
+                enabled = state.boardInteractive,
+                anchors = anchors,
+                dice = {
+                  DiceTray(
+                    rollA = state.rollA,
+                    rollB = state.rollB,
+                    usedA = state.usedA,
+                    usedB = state.usedB,
+                    phase = state.phase,
+                    enabled = state.diceInteractive,
+                    onTap = viewModel::onDiceTapped,
+                    onRollSettled = viewModel::onRollSettled,
+                    dieSize = (layout.frame * 1.14f * 0.63f).dp,
+                    showHint = false,
+                  )
+                },
+              )
+              FlyingChecker(
+                animId = state.animId,
+                move = state.animatingMove,
+                side = state.animatingSide,
+                board = state.board,
+                anchors = anchors,
+                originInRoot = origin,
+                onSettled = viewModel::onMoveSettled,
+              )
+            }
           }
         }
-        }
       }
-      Column(
-        modifier =
-          Modifier.align(Alignment.CenterEnd)
-            .fillMaxHeight()
-            .width(hudGutter)
-            .offset(x = (-10).dp)
-            .padding(top = 20.dp, bottom = 20.dp, end = 12.dp, start = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-      ) {
-        Column(
-          modifier = Modifier.width(IntrinsicSize.Max),
-          verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-          BoardStyleMenu(selected = state.boardStyle, onPick = viewModel::setBoardStyle)
-          AiLevelMenu(level = state.aiLevel, onPick = viewModel::setAiLevel)
-          HudButton(onClick = viewModel::requestNewGame, label = "New game")
+      if (landscape) {
+        val boardHost =
+          if (!isTablet) Modifier.fillMaxSize().padding(end = hudGutter) else Modifier.fillMaxSize()
+        Box(modifier = boardHost) {
+          BoardCanvas(Modifier.align(Alignment.Center).width(boardWidth).height(boardHeight))
         }
-        Spacer(Modifier.weight(1f))
-        if (state.statusText.isNotEmpty()) {
-          Text(
+        Column(
+          modifier =
+            Modifier.align(Alignment.CenterEnd)
+              .fillMaxHeight()
+              .width(hudGutter)
+              .offset(x = (-10).dp)
+              .padding(top = 20.dp, bottom = 20.dp, end = 12.dp, start = 8.dp),
+          horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+          Column(
+            modifier = Modifier.width(IntrinsicSize.Max),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+          ) {
+            BoardStyleMenu(selected = state.boardStyle, onPick = viewModel::setBoardStyle, modifier = Modifier.fillMaxWidth())
+            AiLevelMenu(level = state.aiLevel, onPick = viewModel::setAiLevel, modifier = Modifier.fillMaxWidth())
+            HudButton(onClick = viewModel::requestNewGame, label = "New game", modifier = Modifier.fillMaxWidth())
+          }
+          Spacer(Modifier.weight(1f))
+          HudStatus(text = state.statusText, color = state.boardStyle.chrome.status)
+        }
+      } else {
+        Box(modifier = Modifier.fillMaxSize()) {
+          Column(
+            modifier =
+              Modifier.align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 12.dp)
+                .width(IntrinsicSize.Max),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+          ) {
+            BoardStyleMenu(selected = state.boardStyle, onPick = viewModel::setBoardStyle, modifier = Modifier.fillMaxWidth())
+            AiLevelMenu(level = state.aiLevel, onPick = viewModel::setAiLevel, modifier = Modifier.fillMaxWidth())
+            HudButton(onClick = viewModel::requestNewGame, label = "New game", modifier = Modifier.fillMaxWidth())
+          }
+          BoardCanvas(
+            Modifier.align(Alignment.Center).width(boardWidth).height(boardHeight),
+          )
+          HudStatus(
             text = state.statusText,
-            style = hudStatusStyle,
             color = state.boardStyle.chrome.status,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.align(Alignment.BottomCenter).padding(start = 12.dp, end = 12.dp, bottom = 20.dp),
           )
         }
       }
@@ -284,11 +317,24 @@ private fun TableDialog(
 }
 
 @Composable
+private fun HudStatus(text: String, color: Color, modifier: Modifier = Modifier) {
+  if (text.isEmpty()) return
+  Text(
+    text = text,
+    style = hudStatusStyle,
+    color = color,
+    textAlign = TextAlign.Center,
+    modifier = modifier.fillMaxWidth(),
+    maxLines = 1,
+  )
+}
+
+@Composable
 private fun HudButton(onClick: () -> Unit, label: String, modifier: Modifier = Modifier) {
   val chrome = LocalHudChrome.current
   Button(
     onClick = onClick,
-    modifier = modifier.fillMaxWidth().defaultMinSize(minWidth = 0.dp, minHeight = 0.dp).height(34.dp).shadow(4.dp, hudButtonShape),
+    modifier = modifier.defaultMinSize(minWidth = 0.dp, minHeight = 0.dp).height(34.dp).shadow(4.dp, hudButtonShape),
     shape = hudButtonShape,
     border = BorderStroke(1.dp, chrome.border),
     colors =
@@ -346,17 +392,19 @@ private fun ChoiceDialog(onDismissRequest: () -> Unit, content: @Composable () -
 }
 
 @Composable
-private fun HudChoiceMenu(anchorLabel: String, content: @Composable (close: () -> Unit) -> Unit) {
+private fun HudChoiceMenu(anchorLabel: String, modifier: Modifier = Modifier, content: @Composable (close: () -> Unit) -> Unit) {
   var open by remember { mutableStateOf(false) }
-  HudButton(onClick = { open = true }, label = anchorLabel)
-  if (open) {
-    ChoiceDialog(onDismissRequest = { open = false }) { content { open = false } }
+  Box(modifier) {
+    HudButton(onClick = { open = true }, label = anchorLabel, modifier = Modifier.fillMaxWidth())
+    if (open) {
+      ChoiceDialog(onDismissRequest = { open = false }) { content { open = false } }
+    }
   }
 }
 
 @Composable
-private fun AiLevelMenu(level: AiLevel, onPick: (AiLevel) -> Unit) {
-  HudChoiceMenu(anchorLabel = level.label) { close ->
+private fun AiLevelMenu(level: AiLevel, onPick: (AiLevel) -> Unit, modifier: Modifier = Modifier) {
+  HudChoiceMenu(anchorLabel = level.label, modifier = modifier) { close ->
     AiLevel.entries.forEach { option ->
       HudTextAction(
         label = option.label,
@@ -372,8 +420,8 @@ private fun AiLevelMenu(level: AiLevel, onPick: (AiLevel) -> Unit) {
 }
 
 @Composable
-private fun BoardStyleMenu(selected: BoardStyle, onPick: (BoardStyle) -> Unit) {
-  HudChoiceMenu(anchorLabel = "Board") { close ->
+private fun BoardStyleMenu(selected: BoardStyle, onPick: (BoardStyle) -> Unit, modifier: Modifier = Modifier) {
+  HudChoiceMenu(anchorLabel = "Board", modifier = modifier) { close ->
     BoardStyle.entries.forEach { option ->
       HudTextAction(
         label = option.label,

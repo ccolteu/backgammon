@@ -133,7 +133,7 @@ fun GameScreen(modifier: Modifier = Modifier) {
                   enabled = state.diceInteractive,
                   onTap = viewModel::onDiceTapped,
                   onRollSettled = viewModel::onRollSettled,
-                  dieSize = (layout.frame * 0.95f).dp,
+                  dieSize = (layout.frame * 1.14f).dp,
                   showHint = false,
                 )
               },

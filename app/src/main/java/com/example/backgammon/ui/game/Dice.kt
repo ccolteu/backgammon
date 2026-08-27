@@ -78,7 +78,7 @@ fun DiceTray(
   onTap: () -> Unit,
   onRollSettled: () -> Unit,
   modifier: Modifier = Modifier,
-  dieSize: Dp = 78.dp,
+  dieSize: Dp = 88.dp,
   showHint: Boolean = true,
 ) {
   val shownA = rollA.coerceAtLeast(1)
@@ -168,7 +168,7 @@ private fun CubeDie(spin: DieSpin, spent: Boolean, value: Int, dieSize: Dp, modi
       val body = size.minDimension - pad * 2f
       val origin = Offset(pad, pad * 0.7f)
       val radius = body * 0.18f
-      val pipR = body * 0.085f
+      val pipR = body * 0.118f
       drawRoundRect(
         color = IvoryShade,
         topLeft = Offset(origin.x, origin.y + body * 0.11f),

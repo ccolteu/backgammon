@@ -42,6 +42,16 @@ class BoardAnchors {
     points[point] = Offset(root.x + size.width / 2f, root.y + size.height / 2f)
   }
 
+  fun putOffPile(point: Int, coordinates: LayoutCoordinates, count: Int, checkerPx: Float) {
+    val root = coordinates.positionInRoot()
+    val size = coordinates.size
+    points[point] =
+      Offset(
+        root.x + size.width / 2f,
+        trayPileTopCenterY(root.y, size.height.toFloat(), count, checkerPx),
+      )
+  }
+
   fun putOffEdges(coordinates: LayoutCoordinates) {
     val root = coordinates.positionInRoot()
     val size = coordinates.size

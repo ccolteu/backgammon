@@ -44,6 +44,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -408,6 +409,7 @@ private fun OffRack(
   anchors: BoardAnchors,
   modifier: Modifier = Modifier,
 ) {
+  val checkerPx = with(LocalDensity.current) { LocalCheckerSize.current.toPx() }
   Column(modifier = modifier) {
     Spacer(Modifier.height(layout.wellTop.dp))
     OffSlot(
@@ -416,7 +418,7 @@ private fun OffRack(
       modifier =
         Modifier.height(layout.blackWellHeight.dp)
           .fillMaxWidth()
-          .onGloballyPositioned { anchors.putCenter(BLACK_OFF, it) },
+          .onGloballyPositioned { anchors.putOffPile(BLACK_OFF, it, blackOff, checkerPx) },
     )
     Spacer(Modifier.height(layout.wellSplit.dp))
     OffSlot(
@@ -425,7 +427,7 @@ private fun OffRack(
       modifier =
         Modifier.height(layout.whiteWellHeight.dp)
           .fillMaxWidth()
-          .onGloballyPositioned { anchors.putCenter(WHITE_OFF, it) },
+          .onGloballyPositioned { anchors.putOffPile(WHITE_OFF, it, whiteOff, checkerPx) },
     )
     Spacer(Modifier.height(layout.wellBottomPad.dp))
   }

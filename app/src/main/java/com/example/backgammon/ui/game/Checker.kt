@@ -126,6 +126,16 @@ fun trayStackStep(count: Int, wellHeight: Float, checker: Float): Float {
   return minOf(thickness, (available - thickness) / (n - 1))
 }
 
+/** Center Y of the topmost borne-off checker, or the well floor if the tray is empty. */
+fun trayPileTopCenterY(wellTop: Float, wellHeight: Float, count: Int, checker: Float): Float {
+  val thickness = trayEdgeThickness(checker)
+  val n = trayStackCount(count)
+  if (n <= 0) return wellTop + wellHeight - thickness / 2f
+  val step = trayStackStep(n, wellHeight, checker)
+  val stackH = thickness + (n - 1) * step
+  return wellTop + wellHeight - stackH + thickness / 2f
+}
+
 @Composable
 fun CheckerDot(side: Side, size: Dp = CHECKER_DP.dp, badge: Int? = null, modifier: Modifier = Modifier) {
   val sprite = if (side == Side.WHITE) R.drawable.checker_light else R.drawable.checker_dark

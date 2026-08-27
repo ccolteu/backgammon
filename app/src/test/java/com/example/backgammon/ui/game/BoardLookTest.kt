@@ -112,4 +112,20 @@ class BoardLookTest {
     assertEquals(R.drawable.cloth_oat_linen, BoardStyle.ASH_SAGE.cloth)
     assertEquals(R.drawable.cloth_oxblood_damask, BoardStyle.MAHOGANY_CLARET.cloth)
   }
+
+  @Test
+  fun borneOffFlightAimsAtTheTopOfThePile() {
+    val wellTop = 100f
+    val wellH = 200f
+    val checker = 40f
+    val empty = trayPileTopCenterY(wellTop, wellH, 0, checker)
+    val one = trayPileTopCenterY(wellTop, wellH, 1, checker)
+    val five = trayPileTopCenterY(wellTop, wellH, 5, checker)
+    val mid = wellTop + wellH / 2f
+    assertEquals(wellTop + wellH - trayEdgeThickness(checker) / 2f, empty, 0.05f)
+    assertEquals(empty, one, 0.05f)
+    assertTrue(five < one)
+    assertTrue(five > wellTop)
+    assertTrue(empty > mid)
+  }
 }

@@ -418,7 +418,7 @@ private fun OffRack(
       modifier =
         Modifier.height(layout.blackWellHeight.dp)
           .fillMaxWidth()
-          .onGloballyPositioned { anchors.putOffPile(BLACK_OFF, it, blackOff, checkerPx) },
+          .onGloballyPositioned { anchors.putOffPile(BLACK_OFF, it, blackOff, checkerPx, fromTop = true) },
     )
     Spacer(Modifier.height(layout.wellSplit.dp))
     OffSlot(
@@ -427,7 +427,7 @@ private fun OffRack(
       modifier =
         Modifier.height(layout.whiteWellHeight.dp)
           .fillMaxWidth()
-          .onGloballyPositioned { anchors.putOffPile(WHITE_OFF, it, whiteOff, checkerPx) },
+          .onGloballyPositioned { anchors.putOffPile(WHITE_OFF, it, whiteOff, checkerPx, fromTop = false) },
     )
     Spacer(Modifier.height(layout.wellBottomPad.dp))
   }
@@ -437,7 +437,10 @@ private fun OffRack(
 private fun OffSlot(side: Side, count: Int, modifier: Modifier = Modifier) {
   val checker = LocalCheckerSize.current
   val n = trayStackCount(count)
-  BoxWithConstraints(modifier = modifier, contentAlignment = Alignment.BottomCenter) {
+  BoxWithConstraints(
+    modifier = modifier,
+    contentAlignment = if (side == Side.BLACK) Alignment.TopCenter else Alignment.BottomCenter,
+  ) {
     if (n == 0) return@BoxWithConstraints
     val thickness = trayEdgeThickness(checker.value)
     val step = trayStackStep(n, maxHeight.value, checker.value)

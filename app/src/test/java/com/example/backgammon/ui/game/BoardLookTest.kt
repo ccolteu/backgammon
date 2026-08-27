@@ -128,4 +128,17 @@ class BoardLookTest {
     assertTrue(five > wellTop)
     assertTrue(empty > mid)
   }
+
+  @Test
+  fun blackBorneOffPileGrowsTowardTheOpponent() {
+    val wellTop = 100f
+    val wellH = 200f
+    val checker = 40f
+    val empty = trayPileTopCenterY(wellTop, wellH, 0, checker, fromTop = true)
+    val one = trayPileTopCenterY(wellTop, wellH, 1, checker, fromTop = true)
+    val five = trayPileTopCenterY(wellTop, wellH, 5, checker, fromTop = true)
+    assertEquals(wellTop + trayEdgeThickness(checker) / 2f, empty, 0.05f)
+    assertEquals(empty, one, 0.05f)
+    assertTrue(five > one)
+  }
 }

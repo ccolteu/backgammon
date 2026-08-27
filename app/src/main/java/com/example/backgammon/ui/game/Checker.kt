@@ -126,10 +126,22 @@ fun trayStackStep(count: Int, wellHeight: Float, checker: Float): Float {
   return minOf(thickness, (available - thickness) / (n - 1))
 }
 
-/** Center Y of the topmost borne-off checker, or the well floor if the tray is empty. */
-fun trayPileTopCenterY(wellTop: Float, wellHeight: Float, count: Int, checker: Float): Float {
+/** Center Y of the exposed end of the borne-off pile. White sits on the well floor and grows up; black sits on the well roof and grows down (toward the opponent). */
+fun trayPileTopCenterY(
+  wellTop: Float,
+  wellHeight: Float,
+  count: Int,
+  checker: Float,
+  fromTop: Boolean = false,
+): Float {
   val thickness = trayEdgeThickness(checker)
   val n = trayStackCount(count)
+  if (fromTop) {
+    if (n <= 0) return wellTop + thickness / 2f
+    val step = trayStackStep(n, wellHeight, checker)
+    val stackH = thickness + (n - 1) * step
+    return wellTop + stackH - thickness / 2f
+  }
   if (n <= 0) return wellTop + wellHeight - thickness / 2f
   val step = trayStackStep(n, wellHeight, checker)
   val stackH = thickness + (n - 1) * step

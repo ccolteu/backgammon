@@ -26,8 +26,8 @@ enum class BoardStyle(
   EBONY_NAVY(
     label = "Ebony navy",
     drawable = R.drawable.board_ebony_navy,
-    cloth = R.drawable.cloth_navy_wool,
-    backdrop = Color(0xFF0B1018),
+    cloth = R.drawable.cloth_blue_silk,
+    backdrop = Color(0xFF0C1834),
   ),
   ASH_SAGE(
     label = "Ash sage",

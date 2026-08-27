@@ -108,7 +108,7 @@ class BoardLookTest {
   fun eachBoardSitsOnItsPairedCloth() {
     assertEquals(R.drawable.cloth_oak_table, BoardStyle.ORIGINAL.cloth)
     assertEquals(R.drawable.cloth_forest_baize, BoardStyle.CLUB_WALNUT.cloth)
-    assertEquals(R.drawable.cloth_navy_wool, BoardStyle.EBONY_NAVY.cloth)
+    assertEquals(R.drawable.cloth_blue_silk, BoardStyle.EBONY_NAVY.cloth)
     assertEquals(R.drawable.cloth_oat_linen, BoardStyle.ASH_SAGE.cloth)
     assertEquals(R.drawable.cloth_oxblood_damask, BoardStyle.MAHOGANY_CLARET.cloth)
   }

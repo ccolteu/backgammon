@@ -474,7 +474,7 @@ private fun BackgammonBoard(
           modifier = Modifier.weight(1f),
         )
       }
-      Box(Modifier.align(Alignment.Center).offset(y = (-layout.frame * 0.28f).dp)) { dice() }
+      Box(Modifier.align(Alignment.Center).offset(y = (-layout.frame * 0.04f).dp)) { dice() }
     }
     OffRack(
       whiteOff = board.whiteOff,

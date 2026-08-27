@@ -3,6 +3,7 @@ package com.example.backgammon.ui.game
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,15 +20,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -53,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -69,7 +68,6 @@ import com.example.backgammon.theme.BackgammonTheme
 import com.example.backgammon.theme.Brass
 import com.example.backgammon.theme.Cream
 import com.example.backgammon.theme.Highlight
-import com.example.backgammon.theme.Ink
 import com.example.backgammon.theme.WalnutRail
 
 @Composable
@@ -163,9 +161,9 @@ fun GameScreen(modifier: Modifier = Modifier) {
           modifier = Modifier.width(IntrinsicSize.Max),
           verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+          BoardStyleMenu(selected = state.boardStyle, onPick = viewModel::setBoardStyle)
           AiLevelMenu(level = state.aiLevel, onPick = viewModel::setAiLevel)
           HudButton(onClick = viewModel::requestNewGame, label = "New game")
-          BoardStyleMenu(selected = state.boardStyle, onPick = viewModel::setBoardStyle)
         }
         Spacer(Modifier.weight(1f))
         if (state.statusText.isNotEmpty()) {
@@ -181,34 +179,34 @@ fun GameScreen(modifier: Modifier = Modifier) {
     }
   }
   if (state.askConfirmNewGame) {
-    AlertDialog(
+    TableDialog(
+      title = "Start a new game?",
+      text = "This will erase the game in progress.",
+      confirmLabel = "New game",
+      onConfirm = viewModel::confirmNewGame,
+      dismissLabel = "Cancel",
+      onDismiss = viewModel::dismissNewGameConfirm,
       onDismissRequest = viewModel::dismissNewGameConfirm,
-      title = { Text("Start a new game?") },
-      text = { Text("This will erase the game in progress.") },
-      confirmButton = { TextButton(onClick = viewModel::confirmNewGame) { Text("New game") } },
-      dismissButton = { TextButton(onClick = viewModel::dismissNewGameConfirm) { Text("Cancel") } },
     )
   }
   if (state.board.winner != null && !state.askResume && !state.askConfirmNewGame) {
-    AlertDialog(
-      onDismissRequest = {},
-      title = { Text(if (state.board.winner == Side.WHITE) "You won!" else "CPU wins") },
-      text = {
-        Text(
-          if (state.board.winner == Side.WHITE) "All of your checkers are off the board."
-          else "The computer bore off all its checkers.",
-        )
-      },
-      confirmButton = { TextButton(onClick = viewModel::confirmNewGame) { Text("New game") } },
+    TableDialog(
+      title = if (state.board.winner == Side.WHITE) "You won!" else "CPU wins",
+      text =
+        if (state.board.winner == Side.WHITE) "All of your checkers are off the board."
+        else "The computer bore off all its checkers.",
+      confirmLabel = "New game",
+      onConfirm = viewModel::confirmNewGame,
     )
   }
   if (state.askResume) {
-    AlertDialog(
-      onDismissRequest = {},
-      title = { Text("Resume game?") },
-      text = { Text("A game was in progress. Do you want to resume it or start a new one?") },
-      confirmButton = { TextButton(onClick = viewModel::resumeSavedGame) { Text("Resume") } },
-      dismissButton = { TextButton(onClick = viewModel::startNewGameFromPrompt) { Text("New game") } },
+    TableDialog(
+      title = "Resume game?",
+      text = "A game was in progress. Do you want to resume it or start a new one?",
+      confirmLabel = "Resume",
+      onConfirm = viewModel::resumeSavedGame,
+      dismissLabel = "New game",
+      onDismiss = viewModel::startNewGameFromPrompt,
     )
   }
 }
@@ -233,9 +231,53 @@ private val hudStatusStyle =
 
 private val hudButtonShape = RoundedCornerShape(4.dp)
 
+private val hudDialogTitleStyle =
+  TextStyle(
+    fontFamily = FontFamily.Serif,
+    fontWeight = FontWeight.SemiBold,
+    fontSize = 16.sp,
+    letterSpacing = 0.4.sp,
+    lineHeight = 20.sp,
+  )
+
 @Composable
-private fun hudButtonColors() =
-  ButtonDefaults.buttonColors(containerColor = WalnutRail, contentColor = Cream, disabledContainerColor = WalnutRail, disabledContentColor = Cream.copy(alpha = 0.5f))
+private fun TableDialog(
+  title: String,
+  text: String,
+  confirmLabel: String,
+  onConfirm: () -> Unit,
+  dismissLabel: String? = null,
+  onDismiss: (() -> Unit)? = null,
+  onDismissRequest: () -> Unit = {},
+) {
+  AlertDialog(
+    onDismissRequest = onDismissRequest,
+    modifier = Modifier.border(BorderStroke(1.dp, Brass), hudButtonShape),
+    shape = hudButtonShape,
+    containerColor = WalnutRail,
+    titleContentColor = Cream,
+    textContentColor = Cream,
+    tonalElevation = 0.dp,
+    title = {
+      Text(text = title, style = hudDialogTitleStyle, color = Cream, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+    },
+    text = {
+      Text(text = text, style = hudStatusStyle, color = Cream, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+    },
+    confirmButton = {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        if (dismissLabel != null && onDismiss != null) {
+          HudTextAction(label = dismissLabel, onClick = onDismiss)
+        }
+        HudTextAction(label = confirmLabel, onClick = onConfirm, selected = true)
+      }
+    },
+  )
+}
 
 @Composable
 private fun HudButton(onClick: () -> Unit, label: String, modifier: Modifier = Modifier) {
@@ -244,7 +286,7 @@ private fun HudButton(onClick: () -> Unit, label: String, modifier: Modifier = M
     modifier = modifier.fillMaxWidth().defaultMinSize(minWidth = 0.dp, minHeight = 0.dp).height(34.dp).shadow(4.dp, hudButtonShape),
     shape = hudButtonShape,
     border = BorderStroke(1.dp, Brass),
-    colors = hudButtonColors(),
+    colors = ButtonDefaults.buttonColors(containerColor = WalnutRail, contentColor = Cream, disabledContainerColor = WalnutRail, disabledContentColor = Cream.copy(alpha = 0.5f)),
     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
     elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
   ) {
@@ -253,52 +295,82 @@ private fun HudButton(onClick: () -> Unit, label: String, modifier: Modifier = M
 }
 
 @Composable
-private fun AiLevelMenu(level: AiLevel, onPick: (AiLevel) -> Unit) {
+private fun HudTextAction(
+  label: String,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  selected: Boolean = false,
+  enabled: Boolean = true,
+) {
+  Text(
+    text = label,
+    style = hudLabelStyle.copy(fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold, fontSize = 13.sp),
+    color = if (selected) Brass else Cream,
+    textAlign = TextAlign.Center,
+    maxLines = 1,
+    modifier =
+      modifier
+        .clickable(enabled = enabled, onClick = onClick)
+        .padding(horizontal = 8.dp, vertical = 8.dp),
+  )
+}
+
+@Composable
+private fun ChoiceDialog(onDismissRequest: () -> Unit, content: @Composable () -> Unit) {
+  Dialog(onDismissRequest = onDismissRequest) {
+    Column(
+      modifier =
+        Modifier
+          .widthIn(min = 168.dp)
+          .border(BorderStroke(1.dp, Brass), hudButtonShape)
+          .background(WalnutRail, hudButtonShape)
+          .padding(vertical = 8.dp, horizontal = 12.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+      content()
+    }
+  }
+}
+
+@Composable
+private fun HudChoiceMenu(anchorLabel: String, content: @Composable (close: () -> Unit) -> Unit) {
   var open by remember { mutableStateOf(false) }
-  Box(modifier = Modifier.fillMaxWidth()) {
-    HudButton(onClick = { open = true }, label = level.label)
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-      AiLevel.entries.forEach { option ->
-        DropdownMenuItem(
-          text = { Text(option.label, style = hudLabelStyle, color = Ink) },
-          onClick = {
-            onPick(option)
-            open = false
-          },
-        )
-      }
+  HudButton(onClick = { open = true }, label = anchorLabel)
+  if (open) {
+    ChoiceDialog(onDismissRequest = { open = false }) { content { open = false } }
+  }
+}
+
+@Composable
+private fun AiLevelMenu(level: AiLevel, onPick: (AiLevel) -> Unit) {
+  HudChoiceMenu(anchorLabel = level.label) { close ->
+    AiLevel.entries.forEach { option ->
+      HudTextAction(
+        label = option.label,
+        selected = option == level,
+        onClick = {
+          onPick(option)
+          close()
+        },
+        modifier = Modifier.fillMaxWidth(),
+      )
     }
   }
 }
 
 @Composable
 private fun BoardStyleMenu(selected: BoardStyle, onPick: (BoardStyle) -> Unit) {
-  var open by remember { mutableStateOf(false) }
-  Box(modifier = Modifier.fillMaxWidth()) {
-    HudButton(onClick = { open = true }, label = "Board")
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-      BoardStyle.entries.forEach { option ->
-        val current = option == selected
-        DropdownMenuItem(
-          text = {
-            Text(
-              text = option.label,
-              style = hudLabelStyle.copy(fontWeight = if (current) FontWeight.Bold else FontWeight.SemiBold),
-              color = if (current) Brass else Ink,
-            )
-          },
-          enabled = !current,
-          colors =
-            MenuDefaults.itemColors(
-              textColor = Ink,
-              disabledTextColor = Brass,
-            ),
-          onClick = {
-            onPick(option)
-            open = false
-          },
-        )
-      }
+  HudChoiceMenu(anchorLabel = "Board") { close ->
+    BoardStyle.entries.forEach { option ->
+      HudTextAction(
+        label = option.label,
+        selected = option == selected,
+        onClick = {
+          onPick(option)
+          close()
+        },
+        modifier = Modifier.fillMaxWidth(),
+      )
     }
   }
 }

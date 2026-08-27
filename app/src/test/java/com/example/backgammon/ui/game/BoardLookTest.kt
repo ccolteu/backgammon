@@ -1,5 +1,6 @@
 package com.example.backgammon.ui.game
 
+import com.example.backgammon.R
 import com.example.backgammon.theme.BoardFelt
 import com.example.backgammon.theme.WalnutBackground
 import org.junit.Assert.assertEquals
@@ -96,5 +97,19 @@ class BoardLookTest {
     assertEquals(BoardStyle.ORIGINAL, BoardStyle.fromStorage(null))
     assertEquals(WalnutBackground, BoardStyle.ORIGINAL.backdrop)
     assertEquals("Original", BoardStyle.ORIGINAL.label)
+  }
+
+  @Test
+  fun retiredWalnutForestFallsBackToOriginal() {
+    assertEquals(BoardStyle.ORIGINAL, BoardStyle.fromStorage("WALNUT_FOREST"))
+  }
+
+  @Test
+  fun eachBoardSitsOnItsPairedCloth() {
+    assertEquals(R.drawable.cloth_oak_table, BoardStyle.ORIGINAL.cloth)
+    assertEquals(R.drawable.cloth_forest_baize, BoardStyle.CLUB_WALNUT.cloth)
+    assertEquals(R.drawable.cloth_navy_wool, BoardStyle.EBONY_NAVY.cloth)
+    assertEquals(R.drawable.cloth_oat_linen, BoardStyle.ASH_SAGE.cloth)
+    assertEquals(R.drawable.cloth_oxblood_damask, BoardStyle.MAHOGANY_CLARET.cloth)
   }
 }

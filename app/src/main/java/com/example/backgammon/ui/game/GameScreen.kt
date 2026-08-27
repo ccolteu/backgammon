@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -82,6 +83,12 @@ fun GameScreen(modifier: Modifier = Modifier) {
     }
   }
   Box(modifier = modifier.fillMaxSize().background(state.boardStyle.backdrop)) {
+    Image(
+      painter = painterResource(state.boardStyle.cloth),
+      contentDescription = null,
+      modifier = Modifier.fillMaxSize(),
+      contentScale = ContentScale.Crop,
+    )
     val anchors = rememberBoardAnchors()
     var origin by remember { mutableStateOf(Offset.Zero) }
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -90,10 +97,21 @@ fun GameScreen(modifier: Modifier = Modifier) {
       val boardHeight = minOf(maxHeight, playWidth / BOARD_ASPECT)
       val boardWidth = boardHeight * BOARD_ASPECT
       val layout = boardLayout(boardWidth.value, boardHeight.value)
+      Box(
+        modifier =
+          Modifier.align(Alignment.CenterEnd)
+            .fillMaxHeight()
+            .width(hudGutter)
+            .background(state.boardStyle.backdrop.copy(alpha = 0.62f)),
+      )
       Box(modifier = Modifier.fillMaxSize().padding(end = hudGutter)) {
         BoardFrame(
           style = state.boardStyle,
-          modifier = Modifier.align(Alignment.Center).width(boardWidth).height(boardHeight),
+          modifier =
+            Modifier.align(Alignment.Center)
+              .width(boardWidth)
+              .height(boardHeight)
+              .shadow(14.dp, RectangleShape, clip = false),
         ) {
         BoxWithConstraints(Modifier.fillMaxSize().onGloballyPositioned { origin = it.positionInRoot() }) {
           CompositionLocalProvider(LocalCheckerSize provides layout.checker.dp) {

@@ -25,7 +25,7 @@ class EngineTest {
   @Test
   fun easyAndHard_planLegalTurns() {
     val rolled = Rules.withDice(startingGame().copy(sideToMove = Side.BLACK), 3, 5)
-    for (level in listOf(AiLevel.EASY, AiLevel.HARD)) {
+    for (level in listOf(AiLevel.EASY, AiLevel.HARD, AiLevel.EXTREME)) {
       var current = rolled
       val planned = Engine.planTurn(rolled, level, Random(1))
       assertTrue(planned.isNotEmpty())

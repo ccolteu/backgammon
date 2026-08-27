@@ -4,6 +4,7 @@ enum class AiLevel(val label: String) {
   EASY(label = "Easy"),
   MEDIUM(label = "Medium"),
   HARD(label = "Hard"),
+  EXTREME(label = "Extreme"),
   ;
 
   companion object {

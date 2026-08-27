@@ -22,6 +22,7 @@ object Engine {
       AiLevel.EASY -> pickEasy(plays, side, random).path
       AiLevel.MEDIUM -> bestZeroPly(plays, side).path
       AiLevel.HARD -> bestOnePly(plays, side).path
+      AiLevel.EXTREME -> bestOnePlyPubEval(plays, race = PubEval.isRace(state)).path
     }
   }
 
@@ -127,6 +128,50 @@ object Engine {
   private fun bestOnePly(plays: List<Play>, side: Side): Play {
     val candidates = plays.sortedByDescending { fitness(side, evaluateWhiteAdvantage(it.after)) }.take(HARD_CANDIDATES)
     return candidates.maxBy { fitness(side, expectedWhiteAdvantage(it.after)) }
+  }
+
+  private fun bestOnePlyPubEval(plays: List<Play>, race: Boolean): Play {
+    val candidates = plays.sortedByDescending { PubEval.score(it.after, race) }.take(HARD_CANDIDATES)
+    return candidates.maxBy { expectedPubEval(it.after, race) }
+  }
+
+  private fun expectedPubEval(afterPlay: GameState, ourRace: Boolean): Float {
+    val us = afterPlay.sideToMove
+    val handed = Rules.endTurn(afterPlay)
+    if (handed.winner != null) return PubEval.score(handed.copy(sideToMove = us), ourRace)
+    val oppRace = PubEval.isRace(handed)
+    var total = 0f
+    for (a in 1..6) {
+      for (b in a..6) {
+        val weight = if (a == b) 1 else 2
+        val rolled = Rules.withDice(handed, a, b)
+        val reply = bestPubEvalTerminal(rolled, oppRace)
+        val settled = Rules.endTurn(reply)
+        total += weight * PubEval.score(settled.copy(sideToMove = us), ourRace)
+      }
+    }
+    return total
+  }
+
+  private fun bestPubEvalTerminal(state: GameState, race: Boolean): GameState {
+    var bestState = state
+    var bestScore: Float? = null
+
+    fun walk(current: GameState) {
+      val hops = Rules.legalMoves(current)
+      if (hops.isEmpty()) {
+        val score = PubEval.score(current, race)
+        if (bestScore == null || score > bestScore!!) {
+          bestScore = score
+          bestState = current
+        }
+        return
+      }
+      for (hop in hops) walk(Rules.apply(current, hop))
+    }
+
+    walk(state)
+    return bestState
   }
 
   private fun expectedWhiteAdvantage(afterPlay: GameState): Int {

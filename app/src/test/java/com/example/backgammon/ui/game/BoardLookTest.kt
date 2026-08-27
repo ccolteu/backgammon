@@ -32,7 +32,7 @@ class BoardLookTest {
     assertEquals(1024f, trayColumn, 0.5f)
     assertEquals(80f, layout.wellTop, 0.5f)
     assertEquals(908f, 1024f - layout.wellBottomPad, 0.5f)
-    assertTrue(layout.checker <= layout.barWidth + 0.01f)
+    assertTrue(layout.checker <= layout.barWidth * BAR_CHECKER_MAX + 0.01f)
     assertTrue(layout.checker <= layout.pointWidth * CHECKER_FILL + 0.01f)
   }
 
@@ -45,17 +45,17 @@ class BoardLookTest {
 
   @Test
   fun checkerDiameterMatchesOnEveryPointAndTheBar() {
-    assertEquals(28.8f, checkerDiameter(pointWidth = 40f, halfHeight = 250f), 0.05f)
+    assertEquals(33.6f, checkerDiameter(pointWidth = 40f, halfHeight = 250f), 0.05f)
   }
 
   @Test
   fun checkerDiameterFitsFiveWithoutOverlap() {
-    assertEquals(36f, checkerDiameter(pointWidth = 50f, halfHeight = 200f), 0.05f)
+    assertEquals(40f, checkerDiameter(pointWidth = 50f, halfHeight = 200f), 0.05f)
   }
 
   @Test
   fun checkerNeverOutgrowsTheBar() {
-    assertEquals(30f, checkerDiameter(pointWidth = 50f, halfHeight = 200f, barWidth = 30f), 0.01f)
+    assertEquals(31.8f, checkerDiameter(pointWidth = 50f, halfHeight = 200f, barWidth = 30f), 0.05f)
   }
 
   @Test

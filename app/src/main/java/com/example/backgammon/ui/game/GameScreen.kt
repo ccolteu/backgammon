@@ -481,7 +481,7 @@ private fun PointColumn(
         .onGloballyPositioned { anchors.put(point, it, preferBottom = pointUp) },
   ) {
     Column(
-      modifier = Modifier.fillMaxSize().padding(vertical = 3.dp),
+      modifier = Modifier.fillMaxSize(),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = if (pointUp) Arrangement.Bottom else Arrangement.Top,
     ) {

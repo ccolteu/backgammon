@@ -34,7 +34,8 @@ const val WELL_TOP_FRAC = 80f / 1024f
 const val WELL_SPLIT_TOP_FRAC = 459f / 1024f
 const val WELL_SPLIT_BOTTOM_FRAC = 521f / 1024f
 const val WELL_BOTTOM_FRAC = 908f / 1024f
-const val CHECKER_FILL = 0.72f
+const val CHECKER_FILL = 0.84f
+const val BAR_CHECKER_MAX = 1.06f
 const val STACK_OVERLAP = 0f
 const val CHECKER_DP = 36
 const val CHECKER_SHADOW_X = 0.12f
@@ -62,7 +63,7 @@ data class BoardLayout(
 )
 
 fun checkerDiameter(pointWidth: Float, halfHeight: Float, barWidth: Float = Float.POSITIVE_INFINITY): Float =
-  minOf(pointWidth * CHECKER_FILL, halfHeight / 5f, barWidth)
+  minOf(pointWidth * CHECKER_FILL, halfHeight / 5f, barWidth * BAR_CHECKER_MAX)
 
 fun boardLayout(width: Float, height: Float): BoardLayout {
   val leftFrame = width * LEFT_FRAME_FRAC

@@ -1,8 +1,12 @@
 package com.example.backgammon.ui.game
 
+import androidx.compose.ui.graphics.Color
 import com.example.backgammon.R
 import com.example.backgammon.theme.BoardFelt
+import com.example.backgammon.theme.Brass
+import com.example.backgammon.theme.Cream
 import com.example.backgammon.theme.WalnutBackground
+import com.example.backgammon.theme.WalnutRail
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -114,6 +118,24 @@ class BoardLookTest {
   }
 
   @Test
+  fun ashSageStatusInkReadsOnOatLinen() {
+    assertEquals(Color(0xFF3E4134), BoardStyle.ASH_SAGE.statusColor)
+    assertEquals(Cream, BoardStyle.ORIGINAL.statusColor)
+  }
+
+  @Test
+  fun hudChromeFollowsTheBoard() {
+    assertEquals(WalnutRail, BoardStyle.ORIGINAL.chrome.fill)
+    assertEquals(Brass, BoardStyle.ORIGINAL.chrome.border)
+    assertEquals(Color(0xFF1A2A4C), BoardStyle.EBONY_NAVY.chrome.fill)
+    assertEquals(Color(0xFFE4E8F0), BoardStyle.EBONY_NAVY.chrome.onFill)
+    assertEquals(Color(0xFFF2EDE3), BoardStyle.ASH_SAGE.chrome.fill)
+    assertEquals(Color(0xFF3E4134), BoardStyle.ASH_SAGE.chrome.onFill)
+    assertEquals(Color(0xFF4A1822), BoardStyle.MAHOGANY_CLARET.chrome.fill)
+    assertEquals(Brass, BoardStyle.MAHOGANY_CLARET.chrome.border)
+  }
+
+  @Test
   fun borneOffFlightAimsAtTheTopOfThePile() {
     val wellTop = 100f
     val wellH = 200f
@@ -130,15 +152,28 @@ class BoardLookTest {
   }
 
   @Test
-  fun blackBorneOffPileGrowsTowardTheOpponent() {
-    val wellTop = 100f
-    val wellH = 200f
+  fun pointStackTopIsTheCenterFacingChecker() {
+    val top = 0f
+    val height = 200f
     val checker = 40f
-    val empty = trayPileTopCenterY(wellTop, wellH, 0, checker, fromTop = true)
-    val one = trayPileTopCenterY(wellTop, wellH, 1, checker, fromTop = true)
-    val five = trayPileTopCenterY(wellTop, wellH, 5, checker, fromTop = true)
-    assertEquals(wellTop + trayEdgeThickness(checker) / 2f, empty, 0.05f)
-    assertEquals(empty, one, 0.05f)
-    assertTrue(five > one)
+    val oneUp = pointStackTopCenterY(top, height, 1, checker, pointUp = true)
+    val twoUp = pointStackTopCenterY(top, height, 2, checker, pointUp = true)
+    assertEquals(top + height - checker / 2f, oneUp, 0.05f)
+    assertEquals(oneUp - checker, twoUp, 0.05f)
+    val oneDown = pointStackTopCenterY(top, height, 1, checker, pointUp = false)
+    val twoDown = pointStackTopCenterY(top, height, 2, checker, pointUp = false)
+    assertEquals(top + checker / 2f, oneDown, 0.05f)
+    assertEquals(oneDown + checker, twoDown, 0.05f)
+  }
+
+  @Test
+  fun barStackTopFacesTheBoardCenter() {
+    val checker = 40f
+    val blackOne = barStackTopCenterY(0f, 200f, 1, checker, black = true)
+    val blackTwo = barStackTopCenterY(0f, 200f, 2, checker, black = true)
+    assertTrue(blackTwo > blackOne)
+    val whiteOne = barStackTopCenterY(0f, 200f, 1, checker, black = false)
+    val whiteTwo = barStackTopCenterY(0f, 200f, 2, checker, black = false)
+    assertTrue(whiteTwo < whiteOne)
   }
 }

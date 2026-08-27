@@ -114,6 +114,44 @@ fun stackBadge(count: Int): Int? = if (count > 5) count else null
 
 fun stackShown(count: Int): Int = minOf(count.coerceAtLeast(0), 5)
 
+fun stackStep(checkerPx: Float): Float = checkerPx * (1f - STACK_OVERLAP)
+
+/** Center of the checker at the open end of a point stack (toward the board center). */
+fun pointStackTopCenterY(
+  columnTop: Float,
+  columnHeight: Float,
+  shown: Int,
+  checkerPx: Float,
+  pointUp: Boolean,
+): Float {
+  val n = shown.coerceAtLeast(1)
+  val step = stackStep(checkerPx)
+  return if (pointUp) {
+    columnTop + columnHeight - (n - 1) * step - checkerPx / 2f
+  } else {
+    columnTop + (n - 1) * step + checkerPx / 2f
+  }
+}
+
+/** Center of the checker taken from / landed on a bar pile (the end toward the board center). */
+fun barStackTopCenterY(
+  halfTop: Float,
+  halfHeight: Float,
+  shown: Int,
+  checkerPx: Float,
+  black: Boolean,
+): Float {
+  val n = shown.coerceAtLeast(1)
+  val step = stackStep(checkerPx)
+  val stackH = checkerPx + (n - 1) * step
+  val groupTop = halfTop + (halfHeight - stackH) / 2f
+  return if (black) {
+    groupTop + stackH - checkerPx / 2f
+  } else {
+    groupTop + checkerPx / 2f
+  }
+}
+
 fun trayStackCount(off: Int): Int = off.coerceIn(0, 15)
 
 fun trayEdgeThickness(checker: Float): Float = checker * 0.28f

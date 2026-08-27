@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -33,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -65,16 +67,20 @@ import com.example.backgammon.domain.WHITE_BAR
 import com.example.backgammon.domain.WHITE_OFF
 import com.example.backgammon.engine.AiLevel
 import com.example.backgammon.theme.BackgammonTheme
-import com.example.backgammon.theme.Brass
-import com.example.backgammon.theme.Cream
 import com.example.backgammon.theme.Highlight
-import com.example.backgammon.theme.WalnutRail
 
 @Composable
 fun GameScreen(modifier: Modifier = Modifier) {
   val context = LocalContext.current
   val viewModel: BackgammonViewModel = viewModel(factory = BackgammonViewModel.factory(context))
   val state by viewModel.uiState.collectAsStateWithLifecycle()
+  CompositionLocalProvider(LocalHudChrome provides state.boardStyle.chrome) {
+    GameTable(state = state, viewModel = viewModel, modifier = modifier)
+  }
+}
+
+@Composable
+private fun GameTable(state: GameUiState, viewModel: BackgammonViewModel, modifier: Modifier) {
   LaunchedEffect(state.phase) {
     if (state.phase == PlayPhase.NO_MOVES) {
       delay(1_200)
@@ -96,13 +102,6 @@ fun GameScreen(modifier: Modifier = Modifier) {
       val boardHeight = minOf(maxHeight, playWidth / BOARD_ASPECT)
       val boardWidth = boardHeight * BOARD_ASPECT
       val layout = boardLayout(boardWidth.value, boardHeight.value)
-      Box(
-        modifier =
-          Modifier.align(Alignment.CenterEnd)
-            .fillMaxHeight()
-            .width(hudGutter)
-            .background(state.boardStyle.backdrop.copy(alpha = 0.62f)),
-      )
       Box(modifier = Modifier.fillMaxSize().padding(end = hudGutter)) {
         BoardFrame(
           style = state.boardStyle,
@@ -132,7 +131,7 @@ fun GameScreen(modifier: Modifier = Modifier) {
                   enabled = state.diceInteractive,
                   onTap = viewModel::onDiceTapped,
                   onRollSettled = viewModel::onRollSettled,
-                  dieSize = (layout.frame * 1.14f).dp,
+                  dieSize = (layout.frame * 1.14f * 0.63f).dp,
                   showHint = false,
                 )
               },
@@ -141,6 +140,7 @@ fun GameScreen(modifier: Modifier = Modifier) {
               animId = state.animId,
               move = state.animatingMove,
               side = state.animatingSide,
+              board = state.board,
               anchors = anchors,
               originInRoot = origin,
               onSettled = viewModel::onMoveSettled,
@@ -154,6 +154,7 @@ fun GameScreen(modifier: Modifier = Modifier) {
           Modifier.align(Alignment.CenterEnd)
             .fillMaxHeight()
             .width(hudGutter)
+            .offset(x = (-10).dp)
             .padding(top = 20.dp, bottom = 20.dp, end = 12.dp, start = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
       ) {
@@ -170,7 +171,7 @@ fun GameScreen(modifier: Modifier = Modifier) {
           Text(
             text = state.statusText,
             style = hudStatusStyle,
-            color = Cream,
+            color = state.boardStyle.chrome.status,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
           )
@@ -231,6 +232,8 @@ private val hudStatusStyle =
 
 private val hudButtonShape = RoundedCornerShape(4.dp)
 
+private val LocalHudChrome = staticCompositionLocalOf { BoardStyle.ORIGINAL.chrome }
+
 private val hudDialogTitleStyle =
   TextStyle(
     fontFamily = FontFamily.Serif,
@@ -250,19 +253,20 @@ private fun TableDialog(
   onDismiss: (() -> Unit)? = null,
   onDismissRequest: () -> Unit = {},
 ) {
+  val chrome = LocalHudChrome.current
   AlertDialog(
     onDismissRequest = onDismissRequest,
-    modifier = Modifier.border(BorderStroke(1.dp, Brass), hudButtonShape),
+    modifier = Modifier.border(BorderStroke(1.dp, chrome.border), hudButtonShape),
     shape = hudButtonShape,
-    containerColor = WalnutRail,
-    titleContentColor = Cream,
-    textContentColor = Cream,
+    containerColor = chrome.fill,
+    titleContentColor = chrome.onFill,
+    textContentColor = chrome.onFill,
     tonalElevation = 0.dp,
     title = {
-      Text(text = title, style = hudDialogTitleStyle, color = Cream, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+      Text(text = title, style = hudDialogTitleStyle, color = chrome.onFill, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
     },
     text = {
-      Text(text = text, style = hudStatusStyle, color = Cream, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+      Text(text = text, style = hudStatusStyle, color = chrome.onFill, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
     },
     confirmButton = {
       Row(
@@ -281,12 +285,19 @@ private fun TableDialog(
 
 @Composable
 private fun HudButton(onClick: () -> Unit, label: String, modifier: Modifier = Modifier) {
+  val chrome = LocalHudChrome.current
   Button(
     onClick = onClick,
     modifier = modifier.fillMaxWidth().defaultMinSize(minWidth = 0.dp, minHeight = 0.dp).height(34.dp).shadow(4.dp, hudButtonShape),
     shape = hudButtonShape,
-    border = BorderStroke(1.dp, Brass),
-    colors = ButtonDefaults.buttonColors(containerColor = WalnutRail, contentColor = Cream, disabledContainerColor = WalnutRail, disabledContentColor = Cream.copy(alpha = 0.5f)),
+    border = BorderStroke(1.dp, chrome.border),
+    colors =
+      ButtonDefaults.buttonColors(
+        containerColor = chrome.fill,
+        contentColor = chrome.onFill,
+        disabledContainerColor = chrome.fill,
+        disabledContentColor = chrome.onFill.copy(alpha = 0.5f),
+      ),
     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
     elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
   ) {
@@ -302,10 +313,11 @@ private fun HudTextAction(
   selected: Boolean = false,
   enabled: Boolean = true,
 ) {
+  val chrome = LocalHudChrome.current
   Text(
     text = label,
     style = hudLabelStyle.copy(fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold, fontSize = 13.sp),
-    color = if (selected) Brass else Cream,
+    color = if (selected) chrome.accent else chrome.onFill,
     textAlign = TextAlign.Center,
     maxLines = 1,
     modifier =
@@ -317,13 +329,14 @@ private fun HudTextAction(
 
 @Composable
 private fun ChoiceDialog(onDismissRequest: () -> Unit, content: @Composable () -> Unit) {
+  val chrome = LocalHudChrome.current
   Dialog(onDismissRequest = onDismissRequest) {
     Column(
       modifier =
         Modifier
           .widthIn(min = 168.dp)
-          .border(BorderStroke(1.dp, Brass), hudButtonShape)
-          .background(WalnutRail, hudButtonShape)
+          .border(BorderStroke(1.dp, chrome.border), hudButtonShape)
+          .background(chrome.fill, hudButtonShape)
           .padding(vertical = 8.dp, horizontal = 12.dp),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -461,7 +474,7 @@ private fun BackgammonBoard(
           modifier = Modifier.weight(1f),
         )
       }
-      Box(Modifier.align(Alignment.Center)) { dice() }
+      Box(Modifier.align(Alignment.Center).offset(y = (-layout.frame * 0.28f).dp)) { dice() }
     }
     OffRack(
       whiteOff = board.whiteOff,
@@ -481,7 +494,6 @@ private fun OffRack(
   anchors: BoardAnchors,
   modifier: Modifier = Modifier,
 ) {
-  val checkerPx = with(LocalDensity.current) { LocalCheckerSize.current.toPx() }
   Column(modifier = modifier) {
     Spacer(Modifier.height(layout.wellTop.dp))
     OffSlot(
@@ -490,7 +502,7 @@ private fun OffRack(
       modifier =
         Modifier.height(layout.blackWellHeight.dp)
           .fillMaxWidth()
-          .onGloballyPositioned { anchors.putOffPile(BLACK_OFF, it, blackOff, checkerPx, fromTop = true) },
+          .onGloballyPositioned { anchors.putOffWell(BLACK_OFF, it) },
     )
     Spacer(Modifier.height(layout.wellSplit.dp))
     OffSlot(
@@ -499,7 +511,7 @@ private fun OffRack(
       modifier =
         Modifier.height(layout.whiteWellHeight.dp)
           .fillMaxWidth()
-          .onGloballyPositioned { anchors.putOffPile(WHITE_OFF, it, whiteOff, checkerPx, fromTop = false) },
+          .onGloballyPositioned { anchors.putOffWell(WHITE_OFF, it) },
     )
     Spacer(Modifier.height(layout.wellBottomPad.dp))
   }
@@ -573,7 +585,7 @@ private fun PointColumn(
       modifier
         .clickable(enabled = enabled, onClick = onClick)
         .then(if (selected || target) Modifier.background(Highlight) else Modifier)
-        .onGloballyPositioned { anchors.put(point, it, preferBottom = pointUp) },
+        .onGloballyPositioned { anchors.putPoint(point, it, pointUp = pointUp) },
   ) {
     Column(
       modifier = Modifier.fillMaxSize(),
@@ -625,7 +637,7 @@ private fun Bar(
         Modifier.weight(1f)
           .fillMaxWidth()
           .clickable(enabled = enabled) { onPointClick(BLACK_BAR) }
-          .onGloballyPositioned { anchors.putCenter(BLACK_BAR, it) }
+          .onGloballyPositioned { anchors.putBar(BLACK_BAR, it) }
           .then(if (selected == BLACK_BAR || BLACK_BAR in legalTargets) Modifier.background(Highlight) else Modifier),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center,
@@ -637,7 +649,7 @@ private fun Bar(
         Modifier.weight(1f)
           .fillMaxWidth()
           .clickable(enabled = enabled) { onPointClick(WHITE_BAR) }
-          .onGloballyPositioned { anchors.putCenter(WHITE_BAR, it) }
+          .onGloballyPositioned { anchors.putBar(WHITE_BAR, it) }
           .then(if (selected == WHITE_BAR || WHITE_BAR in legalTargets) Modifier.background(Highlight) else Modifier),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center,

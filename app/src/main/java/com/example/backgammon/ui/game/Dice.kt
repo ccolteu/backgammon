@@ -116,7 +116,7 @@ fun DiceTray(
         .padding(vertical = if (showHint) 10.dp else 0.dp),
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(dieSize * 0.28f), verticalAlignment = Alignment.CenterVertically) {
+    Row(horizontalArrangement = Arrangement.spacedBy(dieSize * 0.114f), verticalAlignment = Alignment.CenterVertically) {
       CubeDie(spin = spinA, spent = usedA && phase != PlayPhase.ROLLING, value = shownA, dieSize = dieSize)
       CubeDie(spin = spinB, spent = usedB && phase != PlayPhase.ROLLING, value = shownB, dieSize = dieSize)
     }

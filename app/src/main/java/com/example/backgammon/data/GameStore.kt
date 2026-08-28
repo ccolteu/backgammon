@@ -5,6 +5,7 @@ import com.example.backgammon.domain.GameState
 import com.example.backgammon.domain.MoveCodec
 import com.example.backgammon.domain.startingGame
 import com.example.backgammon.engine.AiLevel
+import com.example.backgammon.ui.game.Ambience
 import com.example.backgammon.ui.game.BoardStyle
 
 interface GameStore {
@@ -21,6 +22,10 @@ interface GameStore {
   fun loadBoardStyle(): BoardStyle
 
   fun saveBoardStyle(style: BoardStyle)
+
+  fun loadAmbience(): Ambience
+
+  fun saveAmbience(ambience: Ambience)
 }
 
 class PrefsGameStore(context: Context) : GameStore {
@@ -48,12 +53,19 @@ class PrefsGameStore(context: Context) : GameStore {
     prefs.edit().putString(KEY_BOARD, style.name).apply()
   }
 
+  override fun loadAmbience(): Ambience = Ambience.fromStorage(prefs.getString(KEY_AMBIENCE, null))
+
+  override fun saveAmbience(ambience: Ambience) {
+    prefs.edit().putString(KEY_AMBIENCE, ambience.name).apply()
+  }
+
   private companion object {
     const val PREFS = "backgammon_game"
     const val KEY_STATE = "state"
     const val KEY_LOG = "log"
     const val KEY_LEVEL = "ai_level"
     const val KEY_BOARD = "board_style"
+    const val KEY_AMBIENCE = "ambience"
   }
 }
 

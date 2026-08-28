@@ -149,6 +149,18 @@ class BackgammonViewModelTest {
   }
 
   @Test
+  fun setAmbience_defaultsToOffAndPersists() {
+    val store = MemoryGameStore()
+    val vm = BackgammonViewModel(store, rollDice = { 3 to 5 })
+    assertEquals(Ambience.OFF, vm.uiState.value.ambience)
+    vm.setAmbience(Ambience.JAZZ)
+    assertEquals(Ambience.JAZZ, vm.uiState.value.ambience)
+    assertEquals(Ambience.JAZZ, store.loadAmbience())
+    val restarted = BackgammonViewModel(store, rollDice = { 3 to 5 })
+    assertEquals(Ambience.JAZZ, restarted.uiState.value.ambience)
+  }
+
+  @Test
   fun deadRoll_showsNoMovesThenPassesToCpu() {
     val points = MutableList(25) { 0 }
     points[24] = -2
@@ -187,6 +199,7 @@ private class MemoryGameStore : GameStore {
   private var state: GameState? = null
   private var level = com.example.backgammon.engine.AiLevel.MEDIUM
   private var board = BoardStyle.ORIGINAL
+  private var ambience = Ambience.OFF
 
   override fun load(): GameState? = state
 
@@ -208,5 +221,11 @@ private class MemoryGameStore : GameStore {
 
   override fun saveBoardStyle(style: BoardStyle) {
     board = style
+  }
+
+  override fun loadAmbience() = ambience
+
+  override fun saveAmbience(ambience: Ambience) {
+    this.ambience = ambience
   }
 }

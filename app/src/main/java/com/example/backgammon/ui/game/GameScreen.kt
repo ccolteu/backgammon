@@ -29,6 +29,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,9 +57,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+import com.example.backgammon.audio.AmbiencePlayer
 import com.example.backgammon.domain.BLACK_BAR
 import com.example.backgammon.domain.BLACK_OFF
 import com.example.backgammon.domain.GameState
@@ -76,7 +81,34 @@ fun GameScreen(modifier: Modifier = Modifier) {
   val viewModel: BackgammonViewModel = viewModel(factory = BackgammonViewModel.factory(context))
   val state by viewModel.uiState.collectAsStateWithLifecycle()
   CompositionLocalProvider(LocalHudChrome provides state.boardStyle.chrome) {
+    AmbiencePlayback(track = state.ambience)
     GameTable(state = state, viewModel = viewModel, modifier = modifier)
+  }
+}
+
+@Composable
+private fun AmbiencePlayback(track: Ambience) {
+  val context = LocalContext.current
+  val owner = LocalLifecycleOwner.current
+  val player = remember { AmbiencePlayer(context) }
+  DisposableEffect(track, owner) {
+    player.setAmbience(track)
+    val observer =
+      LifecycleEventObserver { _, event ->
+        when (event) {
+          Lifecycle.Event.ON_START -> player.onStart()
+          Lifecycle.Event.ON_STOP -> player.onStop()
+          else -> {}
+        }
+      }
+    owner.lifecycle.addObserver(observer)
+    if (owner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) player.onStart()
+    onDispose {
+      owner.lifecycle.removeObserver(observer)
+    }
+  }
+  DisposableEffect(player) {
+    onDispose { player.release() }
   }
 }
 
@@ -180,6 +212,7 @@ private fun GameTable(state: GameUiState, viewModel: BackgammonViewModel, modifi
             verticalArrangement = Arrangement.spacedBy(8.dp),
           ) {
             BoardStyleMenu(selected = state.boardStyle, onPick = viewModel::setBoardStyle, modifier = Modifier.fillMaxWidth())
+            AmbienceMenu(selected = state.ambience, onPick = viewModel::setAmbience, modifier = Modifier.fillMaxWidth())
             AiLevelMenu(level = state.aiLevel, onPick = viewModel::setAiLevel, modifier = Modifier.fillMaxWidth())
             HudButton(onClick = viewModel::requestNewGame, label = "New game", modifier = Modifier.fillMaxWidth())
           }
@@ -197,6 +230,7 @@ private fun GameTable(state: GameUiState, viewModel: BackgammonViewModel, modifi
             horizontalAlignment = Alignment.CenterHorizontally,
           ) {
             BoardStyleMenu(selected = state.boardStyle, onPick = viewModel::setBoardStyle, modifier = Modifier.fillMaxWidth())
+            AmbienceMenu(selected = state.ambience, onPick = viewModel::setAmbience, modifier = Modifier.fillMaxWidth())
             AiLevelMenu(level = state.aiLevel, onPick = viewModel::setAiLevel, modifier = Modifier.fillMaxWidth())
             HudButton(onClick = viewModel::requestNewGame, label = "New game", modifier = Modifier.fillMaxWidth())
           }
@@ -423,6 +457,23 @@ private fun AiLevelMenu(level: AiLevel, onPick: (AiLevel) -> Unit, modifier: Mod
 private fun BoardStyleMenu(selected: BoardStyle, onPick: (BoardStyle) -> Unit, modifier: Modifier = Modifier) {
   HudChoiceMenu(anchorLabel = "Board", modifier = modifier) { close ->
     BoardStyle.entries.forEach { option ->
+      HudTextAction(
+        label = option.label,
+        selected = option == selected,
+        onClick = {
+          onPick(option)
+          close()
+        },
+        modifier = Modifier.fillMaxWidth(),
+      )
+    }
+  }
+}
+
+@Composable
+private fun AmbienceMenu(selected: Ambience, onPick: (Ambience) -> Unit, modifier: Modifier = Modifier) {
+  HudChoiceMenu(anchorLabel = selected.label, modifier = modifier) { close ->
+    Ambience.entries.forEach { option ->
       HudTextAction(
         label = option.label,
         selected = option == selected,

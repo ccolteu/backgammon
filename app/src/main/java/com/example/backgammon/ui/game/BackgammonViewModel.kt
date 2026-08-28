@@ -44,6 +44,7 @@ data class GameUiState(
   val askConfirmNewGame: Boolean = false,
   val aiLevel: AiLevel = AiLevel.MEDIUM,
   val boardStyle: BoardStyle = BoardStyle.ORIGINAL,
+  val ambience: Ambience = Ambience.OFF,
 )
 
 class BackgammonViewModel(
@@ -59,6 +60,7 @@ class BackgammonViewModel(
   private var pendingSaved: GameState? = null
   private var aiLevel: AiLevel = store.loadAiLevel()
   private var boardStyle: BoardStyle = store.loadBoardStyle()
+  private var ambience: Ambience = store.loadAmbience()
   private val _ui = MutableStateFlow(toUi())
   val uiState: StateFlow<GameUiState> = _ui
 
@@ -171,6 +173,13 @@ class BackgammonViewModel(
     _ui.update { it.copy(boardStyle = style) }
   }
 
+  fun setAmbience(track: Ambience) {
+    if (track == ambience) return
+    ambience = track
+    store.saveAmbience(track)
+    _ui.update { it.copy(ambience = track) }
+  }
+
   fun resumeSavedGame() {
     val saved = pendingSaved ?: return
     pendingSaved = null
@@ -280,6 +289,7 @@ class BackgammonViewModel(
       diceInteractive = phase == PlayPhase.AWAITING_ROLL && game.winner == null && game.sideToMove == Side.WHITE,
       aiLevel = aiLevel,
       boardStyle = boardStyle,
+      ambience = ambience,
     )
   }
 

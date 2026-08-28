@@ -163,6 +163,16 @@ class BoardLookTest {
   }
 
   @Test
+  fun ambienceChoicesAreJazzThenOff() {
+    assertEquals(
+      listOf("Jazz", "Off"),
+      Ambience.entries.map { it.label },
+    )
+    assertEquals(Ambience.OFF, Ambience.fromStorage(null))
+    assertNull(Ambience.OFF.rawRes)
+  }
+
+  @Test
   fun ashSageStatusInkReadsOnOatLinen() {
     assertEquals(Color(0xFF3E4134), BoardStyle.ASH_SAGE.statusColor)
     assertEquals(Cream, BoardStyle.ORIGINAL.statusColor)

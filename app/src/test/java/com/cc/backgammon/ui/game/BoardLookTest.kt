@@ -76,6 +76,9 @@ class BoardLookTest {
     assertEquals(72f, layout.leftFrame, 0.5f)
     assertEquals(69f, layout.barWidth, 1.5f)
     assertEquals(1536f - 1332f, layout.trayWidth, 0.5f)
+    assertEquals(60f, layout.wellLeftPad, 1f)
+    assertEquals(78f, layout.wellRightPad, 1f)
+    assertEquals(layout.trayWidth, layout.wellLeftPad + 66f + layout.wellRightPad, 2f)
     assertEquals(99f, layout.topFrame, 0.5f)
     val trayColumn =
       layout.wellTop + layout.blackWellHeight + layout.wellSplit + layout.whiteWellHeight + layout.wellBottomPad

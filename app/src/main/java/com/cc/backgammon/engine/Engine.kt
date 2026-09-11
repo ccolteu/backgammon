@@ -11,22 +11,22 @@ object Engine {
   private const val LOOKAHEAD_CANDIDATES = 8
   private const val WIN = 100_000
 
-  fun chooseMove(state: GameState, level: AiLevel = AiLevel.INTERMEDIATE, random: Random = Random.Default): Move? =
+  fun chooseMove(state: GameState, level: AiLevel = AiLevel.STANDARD, random: Random = Random.Default): Move? =
     planTurn(state, level, random).firstOrNull()
 
-  fun planTurn(state: GameState, level: AiLevel = AiLevel.INTERMEDIATE, random: Random = Random.Default): List<Move> {
+  fun planTurn(state: GameState, level: AiLevel = AiLevel.STANDARD, random: Random = Random.Default): List<Move> {
     val plays = uniquePlays(state)
     if (plays.isEmpty()) return emptyList()
     val side = state.sideToMove
     return when (level) {
       AiLevel.BEGINNER -> pickBeginner(plays, side, random).path
-      AiLevel.INTERMEDIATE -> bestZeroPly(plays, side).path
+      AiLevel.STANDARD -> bestZeroPly(plays, side).path
       AiLevel.ADVANCED -> bestOnePly(plays, side).path
       AiLevel.EXPERT -> bestOnePlyPubEval(plays, race = PubEval.isRace(state)).path
     }
   }
 
-  fun playTurn(state: GameState, level: AiLevel = AiLevel.INTERMEDIATE, random: Random = Random.Default): GameState {
+  fun playTurn(state: GameState, level: AiLevel = AiLevel.STANDARD, random: Random = Random.Default): GameState {
     var current = state
     for (move in planTurn(state, level, random)) {
       current = Rules.apply(current, move)

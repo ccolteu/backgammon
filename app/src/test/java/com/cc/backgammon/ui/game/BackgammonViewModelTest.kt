@@ -202,7 +202,7 @@ class BackgammonViewModelTest {
   fun setAiLevel_persists() {
     val store = MemoryGameStore()
     val vm = vm(store)
-    assertEquals(com.cc.backgammon.engine.AiLevel.INTERMEDIATE, vm.uiState.value.aiLevel)
+    assertEquals(com.cc.backgammon.engine.AiLevel.STANDARD, vm.uiState.value.aiLevel)
     vm.setAiLevel(com.cc.backgammon.engine.AiLevel.ADVANCED)
     assertEquals(com.cc.backgammon.engine.AiLevel.ADVANCED, vm.uiState.value.aiLevel)
     assertEquals(com.cc.backgammon.engine.AiLevel.ADVANCED, store.loadAiLevel())
@@ -279,7 +279,7 @@ class BackgammonViewModelTest {
 
 private class MemoryGameStore : GameStore {
   private var state: GameState? = null
-  private var level = com.cc.backgammon.engine.AiLevel.INTERMEDIATE
+  private var level = com.cc.backgammon.engine.AiLevel.STANDARD
   private var board = BoardStyle.OAK_CHARCOAL
 
   override fun load(): GameState? = state

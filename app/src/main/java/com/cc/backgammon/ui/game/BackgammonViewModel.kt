@@ -49,7 +49,7 @@ data class GameUiState(
   val askResume: Boolean = false,
   val askConfirmNewGame: Boolean = false,
   val newGameEnabled: Boolean = false,
-  val aiLevel: AiLevel = AiLevel.INTERMEDIATE,
+  val aiLevel: AiLevel = AiLevel.STANDARD,
   val boardStyle: BoardStyle = BoardStyle.OAK_CHARCOAL,
 )
 

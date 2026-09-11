@@ -68,7 +68,7 @@ class PubEvalTest {
         val a = rng.nextInt(1, 7)
         val b = rng.nextInt(1, 7)
         state = Rules.withDice(state, a, b)
-        val level = if (state.sideToMove == Side.WHITE) AiLevel.INTERMEDIATE else AiLevel.EXPERT
+        val level = if (state.sideToMove == Side.WHITE) AiLevel.STANDARD else AiLevel.EXPERT
         state = Engine.playTurn(state, level)
       }
       if (state.winner != null) finished += 1

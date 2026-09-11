@@ -13,13 +13,13 @@ class EngineTest {
   @Test
   fun planTurn_returnsMovesWithoutSkippingTheFinalBoard() {
     val rolled = Rules.withDice(startingGame().copy(sideToMove = Side.BLACK), 3, 5)
-    val planned = Engine.planTurn(rolled, AiLevel.INTERMEDIATE)
+    val planned = Engine.planTurn(rolled, AiLevel.STANDARD)
     assertTrue(planned.isNotEmpty())
     var played = rolled
     for (move in planned) {
       played = Rules.apply(played, move)
     }
-    assertEquals(Engine.playTurn(rolled, AiLevel.INTERMEDIATE), Rules.endTurn(played))
+    assertEquals(Engine.playTurn(rolled, AiLevel.STANDARD), Rules.endTurn(played))
   }
 
   @Test
@@ -47,7 +47,7 @@ class EngineTest {
         a = 1,
         b = 2,
       )
-    val after = playOut(game, AiLevel.INTERMEDIATE)
+    val after = playOut(game, AiLevel.STANDARD)
     assertEquals(Side.BLACK, after.ownerAt(20))
     assertEquals(2, after.countAt(20))
     assertEquals(1, after.whiteBar)
@@ -64,7 +64,7 @@ class EngineTest {
         a = 2,
         b = 1,
       )
-    val after = playOut(game, AiLevel.INTERMEDIATE)
+    val after = playOut(game, AiLevel.STANDARD)
     assertEquals(Side.BLACK, after.ownerAt(5))
     assertEquals(2, after.countAt(5))
     assertEquals(0, after.whiteBar)
@@ -81,7 +81,7 @@ class EngineTest {
         a = 3,
         b = 1,
       )
-    val after = playOut(game, AiLevel.INTERMEDIATE)
+    val after = playOut(game, AiLevel.STANDARD)
     assertEquals(Side.BLACK, after.ownerAt(20))
     assertTrue(after.countAt(20) >= 2)
     assertEquals(0, after.whiteBar)
@@ -98,7 +98,7 @@ class EngineTest {
         a = 1,
         b = 2,
       )
-    val after = playOut(game, AiLevel.INTERMEDIATE)
+    val after = playOut(game, AiLevel.STANDARD)
     assertEquals(2, after.countAt(6))
     assertTrue(after.ownerAt(7) != Side.BLACK)
   }
@@ -106,7 +106,7 @@ class EngineTest {
   @Test
   fun beginner_picksAWeakerPlayThanIntermediate() {
     val rolled = Rules.withDice(startingGame().copy(sideToMove = Side.BLACK), 3, 5)
-    val intermediate = playOut(rolled, AiLevel.INTERMEDIATE)
+    val intermediate = playOut(rolled, AiLevel.STANDARD)
     val beginner = playOut(rolled, AiLevel.BEGINNER, Random(1))
     assertTrue(
       Engine.evaluateWhiteAdvantage(beginner) >= Engine.evaluateWhiteAdvantage(intermediate),

@@ -32,6 +32,8 @@ const val LEFT_FRAME_FRAC = 72f / 1536f
 const val BAR_LEFT_FRAC = 676f / 1536f
 const val BAR_RIGHT_FRAC = 745f / 1536f
 const val TRAY_LEFT_FRAC = 1332f / 1536f
+const val WELL_LEFT_FRAC = 1392f / 1536f
+const val WELL_RIGHT_FRAC = 1458f / 1536f
 const val TOP_FRAME_FRAC = 99f / 1024f
 const val BOTTOM_FRAME_FRAC = 113f / 1024f
 const val WELL_TOP_FRAC = 80f / 1024f
@@ -54,6 +56,8 @@ data class BoardLayout(
   val leftPlay: Float,
   val rightPlay: Float,
   val trayWidth: Float,
+  val wellLeftPad: Float,
+  val wellRightPad: Float,
   val wellTop: Float,
   val wellSplit: Float,
   val wellBottomPad: Float,
@@ -115,6 +119,8 @@ fun boardLayout(width: Float, height: Float): BoardLayout {
   val leftPlay = barLeft - leftFrame
   val rightPlay = trayLeft - barRight
   val tray = width - trayLeft
+  val wellLeftPad = (width * WELL_LEFT_FRAC - trayLeft).coerceAtLeast(0f)
+  val wellRightPad = (width - width * WELL_RIGHT_FRAC).coerceAtLeast(0f)
   val wellTop = height * WELL_TOP_FRAC
   val splitTop = height * WELL_SPLIT_TOP_FRAC
   val splitBottom = height * WELL_SPLIT_BOTTOM_FRAC
@@ -134,6 +140,8 @@ fun boardLayout(width: Float, height: Float): BoardLayout {
     leftPlay = leftPlay,
     rightPlay = rightPlay,
     trayWidth = tray,
+    wellLeftPad = wellLeftPad,
+    wellRightPad = wellRightPad,
     wellTop = wellTop,
     wellSplit = wellSplit,
     wellBottomPad = height - wellBottom,

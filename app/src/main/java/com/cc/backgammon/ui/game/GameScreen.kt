@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -51,6 +50,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -176,14 +176,14 @@ private fun GameTable(state: GameUiState, viewModel: BackgammonViewModel, modifi
           horizontalAlignment = Alignment.CenterHorizontally,
         ) {
           Column(
-            modifier = Modifier.width(IntrinsicSize.Max),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
           ) {
             BoardStyleMenu(selected = state.boardStyle, onPick = viewModel::setBoardStyle, modifier = Modifier.fillMaxWidth())
             AiLevelMenu(level = state.aiLevel, onPick = viewModel::setAiLevel, modifier = Modifier.fillMaxWidth())
             HudButton(
               onClick = viewModel::requestNewGame,
-              label = "New game",
+              label = "New",
               enabled = state.newGameEnabled,
               modifier = Modifier.fillMaxWidth(),
             )
@@ -197,7 +197,7 @@ private fun GameTable(state: GameUiState, viewModel: BackgammonViewModel, modifi
             modifier =
               Modifier.align(Alignment.TopEnd)
                 .padding(top = 16.dp, end = 12.dp)
-                .width(IntrinsicSize.Max),
+                .width(HUD_GUTTER_DP.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
           ) {
@@ -205,7 +205,7 @@ private fun GameTable(state: GameUiState, viewModel: BackgammonViewModel, modifi
             AiLevelMenu(level = state.aiLevel, onPick = viewModel::setAiLevel, modifier = Modifier.fillMaxWidth())
             HudButton(
               onClick = viewModel::requestNewGame,
-              label = "New game",
+              label = "New",
               enabled = state.newGameEnabled,
               modifier = Modifier.fillMaxWidth(),
             )
@@ -336,6 +336,7 @@ private fun HudStatus(text: String, color: Color, modifier: Modifier = Modifier)
     textAlign = TextAlign.Center,
     modifier = modifier.fillMaxWidth(),
     maxLines = 1,
+    overflow = TextOverflow.Ellipsis,
   )
 }
 
@@ -363,7 +364,14 @@ private fun HudButton(
     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
     elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
   ) {
-    Text(text = label, style = hudLabelStyle, maxLines = 1, textAlign = TextAlign.Center)
+    Text(
+      text = label,
+      style = hudLabelStyle,
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+      textAlign = TextAlign.Center,
+      modifier = Modifier.fillMaxWidth(),
+    )
   }
 }
 
@@ -382,6 +390,7 @@ private fun HudTextAction(
     color = if (selected) chrome.accent else chrome.onFill,
     textAlign = TextAlign.Center,
     maxLines = 1,
+    overflow = TextOverflow.Ellipsis,
     modifier =
       modifier
         .clickable(enabled = enabled, onClick = onClick)
@@ -420,7 +429,7 @@ private fun HudChoiceMenu(anchorLabel: String, modifier: Modifier = Modifier, co
 
 @Composable
 private fun AiLevelMenu(level: AiLevel, onPick: (AiLevel) -> Unit, modifier: Modifier = Modifier) {
-  HudChoiceMenu(anchorLabel = level.label, modifier = modifier) { close ->
+  HudChoiceMenu(anchorLabel = "Level", modifier = modifier) { close ->
     AiLevel.entries.forEach { option ->
       HudTextAction(
         label = option.label,
@@ -574,6 +583,7 @@ private fun OffRack(
       modifier =
         Modifier.height(layout.blackWellHeight.dp)
           .fillMaxWidth()
+          .padding(start = layout.wellLeftPad.dp, end = layout.wellRightPad.dp)
           .clickable(enabled = enabled) { onPointClick(BLACK_OFF) }
           .onGloballyPositioned { anchors.putOffWell(BLACK_OFF, it) }
           .then(if (selected == BLACK_OFF || BLACK_OFF in legalTargets) Modifier.background(Highlight) else Modifier),
@@ -585,6 +595,7 @@ private fun OffRack(
       modifier =
         Modifier.height(layout.whiteWellHeight.dp)
           .fillMaxWidth()
+          .padding(start = layout.wellLeftPad.dp, end = layout.wellRightPad.dp)
           .clickable(enabled = enabled) { onPointClick(WHITE_OFF) }
           .onGloballyPositioned { anchors.putOffWell(WHITE_OFF, it) }
           .then(if (selected == WHITE_OFF || WHITE_OFF in legalTargets) Modifier.background(Highlight) else Modifier),

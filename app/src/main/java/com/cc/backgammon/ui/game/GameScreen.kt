@@ -335,8 +335,7 @@ private fun HudStatus(text: String, color: Color, modifier: Modifier = Modifier)
     color = color,
     textAlign = TextAlign.Center,
     modifier = modifier.fillMaxWidth(),
-    maxLines = 1,
-    overflow = TextOverflow.Ellipsis,
+    maxLines = 2,
   )
 }
 

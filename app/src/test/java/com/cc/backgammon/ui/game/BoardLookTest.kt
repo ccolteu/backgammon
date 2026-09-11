@@ -59,6 +59,31 @@ class BoardLookTest {
   }
 
   @Test
+  fun tabletBoardIsNinetyPercentOfTheFittedSlot() {
+    val windowW = 1920f
+    val windowH = 1200f
+    val hudGutter = 112f
+    val margin = 32f
+    val side = maxOf(margin, hudGutter)
+    val maxW = windowW - 2f * side
+    val maxH = windowH - 2f * margin
+    val fittedH = minOf(maxH, maxW / BOARD_ASPECT)
+    val fittedW = fittedH * BOARD_ASPECT
+    val slot =
+      boardSlot(
+        windowW = windowW,
+        windowH = windowH,
+        tablet = true,
+        landscape = true,
+        hudGutter = hudGutter,
+        hudBar = 100f,
+        margin = margin,
+      )
+    assertEquals(fittedW * TABLET_BOARD_SCALE, slot.width, 0.5f)
+    assertEquals(fittedH * TABLET_BOARD_SCALE, slot.height, 0.5f)
+  }
+
+  @Test
   fun overlayTracksTheBoardPhoto() {
     assertEquals(1536f / 1024f, BOARD_ASPECT, 0.001f)
     assertEquals(72f / 1536f, LEFT_FRAME_FRAC, 0.0001f)

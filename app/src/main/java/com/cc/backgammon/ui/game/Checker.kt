@@ -28,6 +28,7 @@ const val TABLET_SMALLEST_WIDTH_DP = 600
 const val HUD_GUTTER_DP = 112
 const val HUD_BAR_DP = 100
 const val TABLET_BOARD_MARGIN_DP = 32
+const val TABLET_BOARD_SCALE = 0.9f
 const val LEFT_FRAME_FRAC = 72f / 1536f
 const val BAR_LEFT_FRAC = 676f / 1536f
 const val BAR_RIGHT_FRAC = 745f / 1536f
@@ -96,14 +97,17 @@ fun boardSlot(
     val maxW = (windowW - 2f * side).coerceAtLeast(1f)
     val maxH = (windowH - 2f * margin).coerceAtLeast(1f)
     val height = minOf(maxH, maxW / aspect)
-    return BoardSlot(width = height * aspect, height = height)
+    return scaledTabletSlot(width = height * aspect, height = height)
   }
   val vert = maxOf(margin, hudBar)
   val maxW = (windowW - 2f * margin).coerceAtLeast(1f)
   val maxH = (windowH - 2f * vert).coerceAtLeast(1f)
   val height = minOf(maxH, maxW / aspect)
-  return BoardSlot(width = height * aspect, height = height)
+  return scaledTabletSlot(width = height * aspect, height = height)
 }
+
+private fun scaledTabletSlot(width: Float, height: Float): BoardSlot =
+  BoardSlot(width = width * TABLET_BOARD_SCALE, height = height * TABLET_BOARD_SCALE)
 
 fun checkerDiameter(pointWidth: Float, halfHeight: Float, barWidth: Float = Float.POSITIVE_INFINITY): Float =
   minOf(pointWidth * CHECKER_FILL, halfHeight / 5f, barWidth * BAR_CHECKER_MAX)

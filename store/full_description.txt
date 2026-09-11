@@ -1,0 +1,19 @@
+Sit down at the board. Roll. Move. Bear off.
+
+Backgammon is a single-player game against the computer. There is no account, no online match, and no ads. You play White. The CPU plays Black. Games are saved on the device so you can resume later.
+
+PLAY
+Tap the dice to roll. Legal points highlight. Tap a checker, then tap where it should go — including the off tray when you are bearing off. The computer rolls and moves on its own, with each play animated so you can see what it did.
+
+STRENGTH
+Four levels: Beginner, Intermediate, Advanced, and Expert. Intermediate is the everyday opponent. Advanced and Expert look a roll ahead; Expert uses a classic position evaluator. Pick a level from the board without resetting the game.
+
+BOARDS
+Five finishes, each with its own table cloth and HUD: Oak charcoal, Club walnut, Ebony navy, Ash sage, and Mahogany claret. Change the board at any time.
+
+WHAT THIS APP IS NOT
+Not online multiplayer. Not match play. No doubling cube. No sign-in, no ads, no in-app purchases. Rankings and clubs are someone else's product.
+
+Portrait or landscape. Phone or tablet. Offline.
+
+Backgammon. Tap the dice. Bear off.

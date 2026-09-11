@@ -1,0 +1,1 @@
+Play backgammon against the computer. Four strengths. Five boards. Offline.

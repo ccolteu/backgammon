@@ -1,0 +1,1 @@
+First Play Store release. Play White against the computer at four strengths, on five board finishes. Games resume on this device. Offline. No ads.
